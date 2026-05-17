@@ -3297,7 +3297,7 @@ extern int                      g_buildBspNodeCount;
 extern short                   *bspShadowIndexes;
 extern unsigned short           bspDrawIndexes[MAX_MAP_DRAW_INDEXES]; 
 extern short                    bspOccluderIndexes[MAX_MAP_OCCLUDER_INDEXES];
-BspOccluderEdge_t               bspOccluderEdges[MAX_MAP_OCCLUDER_EDGES]; 
+extern BspOccluderEdge_t        bspOccluderEdges[MAX_MAP_OCCLUDER_EDGES]; 
 extern vec3_t                   bspPortalVerts[MAX_MAP_PORTAL_VERTS]; 
 
 /* Bsp output counts */

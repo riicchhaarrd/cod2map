@@ -54,9 +54,10 @@ static short             _bspShadowIndexBuf[MAX_MAP_SHADOW_INDEXES + SHADOW_INDE
 short                   *bspShadowIndexes = &_bspShadowIndexBuf[SHADOW_INDEX_SENTINEL];
 
 /* occluders */
-BspOccluder_t bspOccluders[MAX_MAP_OCCLUDERS];
-short         bspOccluderIndexes[MAX_MAP_OCCLUDER_INDEXES];
-int           bspOccluderPlanes[MAX_MAP_OCCLUDER_PLANES];
+BspOccluder_t     bspOccluders[MAX_MAP_OCCLUDERS];
+BspOccluderEdge_t bspOccluderEdges[MAX_MAP_OCCLUDER_EDGES];
+short             bspOccluderIndexes[MAX_MAP_OCCLUDER_INDEXES];
+int               bspOccluderPlanes[MAX_MAP_OCCLUDER_PLANES];
 
 /* cells / cullgroups */
 BspCell_t      bspCells[MAX_MAP_CELLS];

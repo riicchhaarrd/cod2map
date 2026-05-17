@@ -94,8 +94,38 @@ if(MSVC)
   target_compile_options(cod2map PRIVATE /W3 /wd4244 /wd4267 /wd4305 /wd4996)
 else()
   target_compile_definitions(cod2map PRIVATE HAVE_UNISTD_H)
-  target_compile_options(cod2map PRIVATE -fcommon -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function -Wno-format-truncation -Wno-format-overflow -Wno-incompatible-pointer-types -Wno-error=incompatible-pointer-types)
-  target_link_libraries(cod2map PRIVATE m)
+  target_compile_options(cod2map PRIVATE
+    -Wall
+    -Wextra
+    -Wno-unused-parameter
+    -Wno-missing-field-initializers
+    -Wno-sign-compare
+    -Wno-unused-variable
+    -Wno-unused-but-set-variable
+    -Wno-unused-function
+    -Wno-incompatible-pointer-types
+    -Wno-error=incompatible-pointer-types
+  )
+
+  if(EMSCRIPTEN OR COD2MAP_WASM)
+    # wasm-ld does not support ELF-style COMMON symbols.  The original
+    # decompiled C source relies heavily on tentative globals, so the native
+    # build keeps -fcommon, but the Emscripten build must emit real BSS
+    # definitions at compile time.
+    target_compile_options(cod2map PRIVATE
+      -fno-common
+      -Wno-typedef-redefinition
+      -Wno-logical-op-parentheses
+      -Wno-cast-function-type-mismatch
+    )
+  else()
+    target_compile_options(cod2map PRIVATE
+      -fcommon
+      -Wno-format-truncation
+      -Wno-format-overflow
+    )
+    target_link_libraries(cod2map PRIVATE m)
+  endif()
 endif()
 
 if(UNIX AND NOT EMSCRIPTEN)
