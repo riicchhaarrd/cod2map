@@ -64,6 +64,28 @@ Returns the directory containing the executable, cached in a static buffer
 */
 char *Sys_DefaultBasePath(void)
 {
+#if defined(__EMSCRIPTEN__)
+  int len;
+
+  if ( !sys_basepath[0] )
+  {
+    if ( !_getcwd(sys_basepath, sizeof(sys_basepath)) )
+    {
+      sys_basepath[0] = '/';
+      sys_basepath[1] = '\0';
+    }
+    for ( len = 0; sys_basepath[len]; len++ )
+    {
+      if ( sys_basepath[len] == '\\' )
+        sys_basepath[len] = '/';
+    }
+    while ( len > 1 && sys_basepath[len - 1] == '/' )
+      sys_basepath[--len] = '\0';
+    if ( len > 4 && !Q_stricmp(&sys_basepath[len - 4], "/bin") )
+      sys_basepath[len - 4] = '\0';
+  }
+  return sys_basepath;
+#else
   HMODULE hModule;
   DWORD len;
   CHAR ch;
@@ -96,6 +118,7 @@ char *Sys_DefaultBasePath(void)
     sys_basepath[len] = 0;
   }
   return sys_basepath;
+#endif
 }
 
 /*

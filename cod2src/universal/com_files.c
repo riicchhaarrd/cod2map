@@ -86,6 +86,7 @@ Extracts basepath and gamedir from the map path by finding the "maps" directory 
 unsigned int FS_Startup(const char *mapPath)
 {
   int pathLen;
+  int baseLen;
   int i;
   char *pos;
   char *gameDir;
@@ -118,9 +119,12 @@ unsigned int FS_Startup(const char *mapPath)
   if ( !gameDir || gameDir == fullPath )
     Com_Error("There should be two folders below '%s' in a proper install\n", "maps");
 
-  /* extract basepath (everything before gamedir) */
-  memcpy(g_basePath, fullPath, gameDir - fullPath);
-  g_basePath[gameDir - fullPath] = '\0';
+  /* extract basepath (everything before gamedir), without a trailing slash */
+  baseLen = (int)(gameDir - fullPath);
+  while ( baseLen > 1 && (fullPath[baseLen - 1] == '/' || fullPath[baseLen - 1] == '\\') )
+    --baseLen;
+  memcpy(g_basePath, fullPath, baseLen);
+  g_basePath[baseLen] = '\0';
 
   /* extract gamedir name (up to next '/') */
   for ( i = 0; gameDir[i] && gameDir[i] != '/'; i++ )

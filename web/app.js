@@ -8,6 +8,7 @@ const downloads = document.getElementById('downloads');
 const filePicker = document.getElementById('filePicker');
 
 const OPFS_ROOT = 'cod2map-vfs';
+const DEFAULT_MOUNT_ROOT = '/vfs/game';
 
 let currentSource = null;
 let latestRunId = 0;
@@ -44,6 +45,18 @@ function safeRelativePath(path) {
   return rel;
 }
 
+function sanitizeMountName(name) {
+  const clean = String(name || 'game')
+    .normalize('NFKD')
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 48);
+  return clean || 'game';
+}
+
+function mountRootForLabel(label) {
+  return `/vfs/${sanitizeMountName(label)}`;
+}
 
 function pathSegments(path) {
   return normalizePath(path).toLowerCase().split('/').filter(Boolean);
@@ -72,7 +85,9 @@ function inferMapChoice(path) {
     const sourceRel = rel.slice('map_source/'.length);
     if (!sourceRel || sourceRel.toLowerCase().startsWith('prefabs/')) return null;
 
-    const compileRel = `raw/maps/${sourceRel}`;
+    const compileRel = sourceRel.toLowerCase().startsWith('maps/')
+      ? `main/${sourceRel}`
+      : `main/maps/${sourceRel}`;
     return {
       sourcePath: rel,
       compilePath: compileRel,
@@ -105,6 +120,22 @@ function collectMapChoices(paths) {
   return [...bySource.values()].sort((a, b) => a.label.localeCompare(b.label));
 }
 
+function analyzeSourceLayout(paths) {
+  const lower = new Set(paths.map(p => normalizePath(p).toLowerCase()));
+  const hasMainIwd = [...lower].some(p => /^main\/[^/]+\.iwd$/.test(p));
+  const hasDefaultCfg = lower.has('main/default.cfg') || lower.has('main/default_localize.cfg');
+  const hasMainDir = [...lower].some(p => p.startsWith('main/'));
+  const warnings = [];
+
+  if (!hasMainDir) {
+    warnings.push('no main/ folder detected; select the CoD2 install root, not bin/ or map_source/');
+  } else if (!hasMainIwd && !hasDefaultCfg) {
+    warnings.push('no main/*.iwd or main/default.cfg detected; the selected folder may not be a complete CoD2 install');
+  }
+
+  return warnings;
+}
+
 function setMapOptions(paths) {
   mapSelect.textContent = '';
   const choices = collectMapChoices(paths);
@@ -119,8 +150,10 @@ function setMapOptions(paths) {
     mapSelect.appendChild(opt);
   }
 
+  const warnings = currentSource ? analyzeSourceLayout(paths) : [];
+  const warningText = warnings.length ? ` Warning: ${warnings.join('; ')}.` : '';
   const sourceText = currentSource
-    ? `${currentSource.label}: ${currentSource.entries.length} file reference(s), ${choices.length} compilable map source(s).`
+    ? `${currentSource.label}: ${currentSource.entries.length} file reference(s), ${choices.length} compilable map source(s).${warningText}`
     : 'No files loaded.';
   setStatus(sourceStatus, choices.length ? sourceText : `${sourceText} No compilable map sources were found.`);
 }
@@ -144,7 +177,12 @@ async function scanDirectorySource(handle) {
     count++;
     if (count % 500 === 0) setStatus(sourceStatus, `Indexed ${count} file reference(s)...`);
   }
-  currentSource = { type: 'directory', label: 'Directory handle VFS', entries };
+  currentSource = {
+    type: 'directory',
+    label: handle.name ? `Directory handle VFS: ${handle.name}` : 'Directory handle VFS',
+    mountRoot: mountRootForLabel(handle.name || 'game'),
+    entries
+  };
   setMapOptions(entries.map(e => e.path));
 }
 
@@ -195,14 +233,14 @@ async function scanOpfsSource() {
   try {
     root = await opfsGameRoot(false);
   } catch (e) {
-    currentSource = { type: 'opfs', label: 'OPFS staged VFS', entries: [] };
+    currentSource = { type: 'opfs', label: 'OPFS staged VFS', mountRoot: DEFAULT_MOUNT_ROOT, entries: [] };
     setMapOptions([]);
     return;
   }
 
   const entries = [];
   for await (const entry of walkOpfs(root)) entries.push(entry);
-  currentSource = { type: 'opfs', label: 'OPFS staged VFS', entries };
+  currentSource = { type: 'opfs', label: 'OPFS staged VFS', mountRoot: DEFAULT_MOUNT_ROOT, entries };
   setMapOptions(entries.map(e => e.path));
 }
 
@@ -316,6 +354,7 @@ async function runSelectedMap() {
     compileMap,
     loadFromPath,
     platformPc: document.getElementById('platformPc').checked,
+    mountRoot: currentSource.mountRoot || DEFAULT_MOUNT_ROOT,
     files
   });
 }
