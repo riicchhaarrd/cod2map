@@ -44,22 +44,85 @@ function safeRelativePath(path) {
   return rel;
 }
 
+
+function pathSegments(path) {
+  return normalizePath(path).toLowerCase().split('/').filter(Boolean);
+}
+
+function hasPathSegment(path, segment) {
+  return pathSegments(path).includes(segment.toLowerCase());
+}
+
+function isAutosaveMap(path) {
+  const name = normalizePath(path).split('/').pop().toLowerCase();
+  return name === 'autosave.map' || name.endsWith('_autosave.map') || name.endsWith('.autosave.map');
+}
+
+function inferMapChoice(path) {
+  const rel = normalizePath(path);
+  const lower = rel.toLowerCase();
+  const segments = pathSegments(rel);
+
+  if (!lower.endsWith('.map')) return null;
+  if (isAutosaveMap(rel)) return null;
+  if (segments.includes('bin') || segments.includes('collmaps')) return null;
+  if (segments.includes('prefabs')) return null;
+
+  if (lower.startsWith('map_source/')) {
+    const sourceRel = rel.slice('map_source/'.length);
+    if (!sourceRel || sourceRel.toLowerCase().startsWith('prefabs/')) return null;
+
+    const compileRel = `raw/maps/${sourceRel}`;
+    return {
+      sourcePath: rel,
+      compilePath: compileRel,
+      loadFromPath: rel,
+      label: `${rel} → ${compileRel}`
+    };
+  }
+
+  if (lower.startsWith('devraw/')) return null;
+
+  if (hasPathSegment(rel, 'maps')) {
+    return {
+      sourcePath: rel,
+      compilePath: rel,
+      loadFromPath: '',
+      label: rel
+    };
+  }
+
+  return null;
+}
+
+function collectMapChoices(paths) {
+  const bySource = new Map();
+  for (const path of paths) {
+    const choice = inferMapChoice(path);
+    if (!choice) continue;
+    if (!bySource.has(choice.sourcePath)) bySource.set(choice.sourcePath, choice);
+  }
+  return [...bySource.values()].sort((a, b) => a.label.localeCompare(b.label));
+}
+
 function setMapOptions(paths) {
   mapSelect.textContent = '';
-  const maps = [...paths].filter(p => p.toLowerCase().endsWith('.map'));
-  maps.sort((a, b) => a.localeCompare(b));
+  const choices = collectMapChoices(paths);
 
-  for (const mapPath of maps) {
+  for (const choice of choices) {
     const opt = document.createElement('option');
-    opt.value = mapPath;
-    opt.textContent = mapPath;
+    opt.value = choice.sourcePath;
+    opt.dataset.sourcePath = choice.sourcePath;
+    opt.dataset.compilePath = choice.compilePath;
+    opt.dataset.loadFromPath = choice.loadFromPath;
+    opt.textContent = choice.label;
     mapSelect.appendChild(opt);
   }
 
   const sourceText = currentSource
-    ? `${currentSource.label}: ${currentSource.entries.length} file reference(s), ${maps.length} map file(s).`
+    ? `${currentSource.label}: ${currentSource.entries.length} file reference(s), ${choices.length} compilable map source(s).`
     : 'No files loaded.';
-  setStatus(sourceStatus, maps.length ? sourceText : `${sourceText} No .map files were found.`);
+  setStatus(sourceStatus, choices.length ? sourceText : `${sourceText} No compilable map sources were found.`);
 }
 
 async function* walkDirectoryHandles(handle, prefix = '') {
@@ -193,8 +256,11 @@ async function runSelectedMap() {
   downloads.textContent = '';
   consoleEl.textContent = '';
 
-  const selectedMap = mapSelect.value;
-  if (!selectedMap) {
+  const selectedOption = mapSelect.selectedOptions[0];
+  const selectedMap = selectedOption?.dataset.sourcePath || mapSelect.value;
+  const compileMap = selectedOption?.dataset.compilePath || selectedMap;
+  const loadFromPath = selectedOption?.dataset.loadFromPath || '';
+  if (!selectedMap || !compileMap) {
     setStatus(runStatus, 'No map selected.');
     return;
   }
@@ -247,6 +313,8 @@ async function runSelectedMap() {
     type: 'run',
     runId,
     selectedMap,
+    compileMap,
+    loadFromPath,
     platformPc: document.getElementById('platformPc').checked,
     files
   });

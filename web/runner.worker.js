@@ -132,11 +132,22 @@ async function runCod2Map(message) {
       }
     }
 
+    const selectedMap = normalizePath(message.selectedMap);
+    const compileMap = normalizePath(message.compileMap || selectedMap);
+    const loadFromPath = normalizePath(message.loadFromPath || '');
+    const compileVPath = `${VROOT}/${compileMap}`;
+    const loadFromVPath = loadFromPath ? `${VROOT}/${loadFromPath}` : '';
+    mkdirp(module.FS, dirname(compileVPath));
+
     const args = [];
     if (message.platformPc) args.push('-platform', 'pc');
-    args.push(`${VROOT}/${normalizePath(message.selectedMap)}`);
+    if (loadFromVPath) args.push('-loadFrom', loadFromVPath);
+    args.push(compileVPath);
 
     post({ type: 'log', line: `Lazy VFS mapped ${files.length} file(s). File contents are loaded only when cod2map opens them.` });
+    if (loadFromVPath) {
+      post({ type: 'log', line: `Using source map ${loadFromVPath}; output path seed ${compileVPath}.` });
+    }
     post({ type: 'status', message: `Running cod2map ${args.join(' ')}` });
 
     let exitCode = 0;
@@ -152,7 +163,7 @@ async function runCod2Map(message) {
       return;
     }
 
-    const bsp = findGeneratedBsp(module.FS, message.selectedMap);
+    const bsp = findGeneratedBsp(module.FS, compileMap);
     if (!bsp) {
       post({ type: 'done', exitCode: 0, message: 'cod2map finished, but no generated BSP was found. Check console output.' });
       return;
