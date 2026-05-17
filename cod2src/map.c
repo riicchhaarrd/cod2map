@@ -7,8 +7,6 @@ Reconstructed from cod2map.exe by Rose.
 #include "cod2map.h"
 
 char s_assertDisable_AdjustBrushesForOrigin;
-char s_assertDisable_AdjustBrushesForOrigin;
-char s_assertDisable_LoadPrefab;
 char s_assertDisable_LoadPrefab;
 char s_assertDisable_ParseRawBrush;
 char s_assertDisable_ProcessScriptVehicles;
@@ -221,7 +219,7 @@ void LoadPrefab(const char *prefabName, float *transformMtx, float brushScale, i
   Assert(prefabName, s_assertDisable_LoadPrefab);
   Assert(transformMtx, s_assertDisable_LoadPrefab);
 
-  strcpy(filePath, FS_BuildOSPath(va("map_source\\%s", prefabName)));
+  I_strncpyz(filePath, FS_BuildOSPath(va("map_source\\%s", prefabName)), sizeof(filePath));
 
   if ( LoadFile(filePath, &fileData) >= 0 )
   {
@@ -618,7 +616,7 @@ Brush_t *AddBrushToWorld(const char *mapName)
       double cz = (g_buildBrush->eMins[2] + g_buildBrush->eMaxs[2]) * 0.5;
       char buf[32];
 
-      sprintf(buf, "%i %i %i", (int)cx, (int)cy, (int)cz);
+      Com_sprintf(buf, sizeof(buf), "%i %i %i", (int)cx, (int)cy, (int)cz);
       SetKeyValue(&g_entities[num_entities - 1], "origin", buf);
 
       g_entities[num_entities - 1].origin[0] = cx;
@@ -1227,7 +1225,7 @@ int ProcessMiscModels()
 
     /* build collision map path from model name */
     FS_ExtractBasename(model, baseName);
-    sprintf(collmapPath, "%s/%s.map", FS_BuildOSPath("collmaps"), baseName);
+    Com_sprintf(collmapPath, sizeof(collmapPath), "%s/%s.map", FS_BuildOSPath("collmaps"), baseName);
 
     /* get entity transform */
     GetVectorForKey(ent, "origin", entityOrigin);
@@ -1353,7 +1351,7 @@ int ProcessScriptVehicles()
 
     /* build collision map path */
     FS_ExtractBasename(model, baseName);
-    sprintf(collmapPath, "%s%s.map", FS_BuildOSPath("collmaps/"), baseName);
+    Com_sprintf(collmapPath, sizeof(collmapPath), "%s%s.map", FS_BuildOSPath("collmaps/"), baseName);
 
     /* check if a script_vehicle_collmap already provides collision */
     for ( j = 0; j < num_entities; j++ )

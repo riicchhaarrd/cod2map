@@ -92,8 +92,7 @@ int          byteswapMode;
 float        curveSmoothAngle = 0.01f;
 int          fulldetail;
 int          g_currentEntityIndex;
-char         g_loadFromPath;
-char         g_mapFileExtCheck[4];
+char         g_loadFromPath[MAX_OS_PATH];
 char         g_mapSourceFile[MAX_OS_PATH];
 int          g_numBrushes;
 int          g_numMapBrushes;
@@ -325,9 +324,10 @@ int Com_ErrorLevel(int errorLevel, char *fmt, ...)
   va_list args;
 
   va_start(args, fmt);
-  vsprintf(buffer, fmt, args);
+  _vsnprintf(buffer, sizeof(buffer), fmt, args);
   va_end(args);
-  Com_Printf(buffer);
+  buffer[sizeof(buffer) - 1] = '\0';
+  Com_Printf("%s", buffer);
   return 0;
 }
 
@@ -371,7 +371,7 @@ int BSPInfo(int argc, const char **argv)
     Com_Printf("---------------------\n");
     StripExtension((char *)argv[i]);
     SetBSPFileExtensions("d3d");
-    strcpy(g_outputBasePath, argv[i]);
+    I_strncpyz(g_outputBasePath, argv[i], sizeof(g_outputBasePath));
     ext = GetBSPFileExtension();
     DefaultExtension(g_outputBasePath, ext);
 
@@ -407,7 +407,7 @@ int OnlyEnts(void)
   char bspPath[MAX_OS_PATH];
 
   ext = GetBSPFileExtension();
-  sprintf(bspPath, "%s%s", g_outputBasePath, ext);
+  Com_sprintf(bspPath, sizeof(bspPath), "%s%s", g_outputBasePath, ext);
 
   /* load existing bsp, re-parse entities, write back */
   LoadBSPFile(bspPath);
@@ -514,12 +514,12 @@ int BSP_ByteSwap(const CHAR *basePath)
   FS_InitFilesystemFromArgs(g_basePath, g_fsBaseGame, g_fsBaseGame);
 
   /* build source path */
-  strcpy(g_outputBasePath, ExpandArg(basePath));
+  I_strncpyz(g_outputBasePath, ExpandArg(basePath), sizeof(g_outputBasePath));
   StripExtension(g_outputBasePath);
-  strcat(g_outputBasePath, GetBSPFileExtension());
+  I_strncat(g_outputBasePath, sizeof(g_outputBasePath), GetBSPFileExtension());
 
   /* build target path with swapped platform directory */
-  strcpy(g_bspSwapPath, g_outputBasePath);
+  I_strncpyz(g_bspSwapPath, g_outputBasePath, sizeof(g_bspSwapPath));
   FS_ReplacePlatformPath(g_bspSwapPath, (char *)g_sourcePlatform->basePath, g_targetPlatform->basePath);
 
   printf("\nByte swapping: \n");
@@ -783,14 +783,16 @@ int main(int argc, const char **argv, const char **envp)
   /* unbuffered stdout — survives crashes when piped/redirected */
   setvbuf(stdout, NULL, _IONBF, 0);
   
-#ifndef _WIN64
+#if defined(_WIN32) && !defined(_WIN64)
   /* set x87 FPU to 53-bit precision (double) — matches original exe behavior */
   _controlfp(_PC_53, _MCW_PC);
 #endif
 
+#if defined(_MSC_VER)
   /* restore MSVC6 CRT printf rounding (round-half-up, 3-digit exponents) */
   _CRT_INTERNAL_LOCAL_PRINTF_OPTIONS &= ~_CRT_INTERNAL_PRINTF_STANDARD_ROUNDING;
   _CRT_INTERNAL_LOCAL_PRINTF_OPTIONS |= _CRT_INTERNAL_PRINTF_LEGACY_THREE_DIGIT_EXPONENTS;
+#endif
 
   Com_Printf("CoD2Map v1.1 (c) 2002 Id Software Inc. / Infinity Ward\n");
 
@@ -826,13 +828,13 @@ int main(int argc, const char **argv, const char **envp)
   }
   if ( !strcmp(argv[1], "-vis") )
   {
-    VisMain(argc - 1, argv + 1);
+    VisMain(argc - 1, (char **)(argv + 1));
     return 0;
   }
 
   /* parse options and start BSP compilation */
   Com_Printf("---- cod2map ----\n");
-  g_loadFromPath = 0;
+  g_loadFromPath[0] = '\0';
   ProcessBSPArguments(argv + 1, argc - 2);
   startTime = I_FloatTime();
   ThreadSetDefault();
@@ -848,21 +850,21 @@ int main(int argc, const char **argv, const char **envp)
   FS_Startup_Simple();
 
   /* set up output paths */
-  strcpy(g_outputBasePath, ExpandArg(argv[argc - 1]));
+  I_strncpyz(g_outputBasePath, ExpandArg(argv[argc - 1]), sizeof(g_outputBasePath));
   StripExtension(g_outputBasePath);
 
   /* remove stale output files */
   prtExt = GetPRTFileExtension();
-  sprintf(buf, "%s%s", g_outputBasePath, prtExt);
+  Com_sprintf(buf, sizeof(buf), "%s%s", g_outputBasePath, prtExt);
   remove(buf);
-  sprintf(buf, "%s.lin", g_outputBasePath);
+  Com_sprintf(buf, sizeof(buf), "%s.lin", g_outputBasePath);
   remove(buf);
 
   /* determine source map file */
-  strcpy(g_mapSourceFile, ExpandArg(argv[argc - 1]));
-  if ( strcmp(&g_mapFileExtCheck[strlen(g_mapSourceFile)], ".reg") )
+  I_strncpyz(g_mapSourceFile, ExpandArg(argv[argc - 1]), sizeof(g_mapSourceFile));
+  if ( Q_stricmp(COM_GetExtension(g_mapSourceFile), ".reg") )
   {
-    sprintf(buf, "%s.reg", g_outputBasePath);
+    Com_sprintf(buf, sizeof(buf), "%s.reg", g_outputBasePath);
     remove(buf);
     DefaultExtension(g_mapSourceFile, ".map");
   }
@@ -874,8 +876,8 @@ int main(int argc, const char **argv, const char **envp)
   }
 
   /* BSP compilation pipeline */
-  if ( strlen(&g_loadFromPath) )
-    LoadMapFile(&g_loadFromPath);
+  if ( strlen(g_loadFromPath) )
+    LoadMapFile(g_loadFromPath);
   else
     LoadMapFile(g_mapSourceFile);
 
@@ -910,7 +912,7 @@ int Opt_loadFrom(int argc, char **argv)
       Com_Printf("%-20s %s\n", optionsTable[i].name, optionsTable[i].description);
     exit(-1);
   }
-  strcpy(&g_loadFromPath, argv[1]);
+  I_strncpyz(g_loadFromPath, argv[1], sizeof(g_loadFromPath));
   return 2;
 }
 
@@ -1156,7 +1158,7 @@ int ProcessWorldBrushes(void)
     ent = &g_entities[i];
     if ( ent->brushes || ent->patches )
     {
-      sprintf(modelBuffer, "*%i", modelNum++);
+      Com_sprintf(modelBuffer, sizeof(modelBuffer), "*%i", modelNum++);
       SetKeyValue(ent, "model", modelBuffer);
     }
   }

@@ -35,19 +35,11 @@ int   *triVertexIndexMap;
 
 char s_assertDisable_FixSurfaceJunctions;
 char s_assertDisable_RemoveDegenerateEdges;
-char s_assertDisable_RemoveDegenerateEdges;
-char s_assertDisable_RemoveDegenerateEdges;
-char s_assertDisable_RemoveDegenerateEdges;
 char s_assertDisable_TJunc_FindEdge;
 char s_assertDisable_TJunc_Init;
 char s_assertDisable_TJunc_ProcessSurface;
 char s_assertDisable_TJunc_ProcessWinding;
-char s_assertDisable_TJunc_ProcessWinding;
-char s_assertDisable_TJunc_ProcessWinding;
 char s_assertDisable_TjuncClampNode;
-char s_assertDisable_TjuncClampNode;
-char s_assertDisable_TjuncClampNode;
-char s_assertDisable_TjuncFixFaces;
 char s_assertDisable_TjuncFixFaces;
 
 

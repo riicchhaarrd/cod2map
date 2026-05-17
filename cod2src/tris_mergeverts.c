@@ -11,18 +11,8 @@ lists, and snaps winding vertices to the shared vertex pool.
 #include "cod2map.h"
 
 char s_assertDisable_ApplyMergeMap;
-char s_assertDisable_ApplyMergeMap;
-char s_assertDisable_BuildMergeMap;
-char s_assertDisable_BuildMergeMap;
-char s_assertDisable_BuildMergeMap;
-char s_assertDisable_BuildMergeMap;
 char s_assertDisable_BuildMergeMap;
 char s_assertDisable_FindLoopLength;
-char s_assertDisable_FindLoops;
-char s_assertDisable_FindLoops;
-char s_assertDisable_FindLoops;
-char s_assertDisable_FindLoops;
-char s_assertDisable_FindLoops;
 char s_assertDisable_FindLoops;
 
 

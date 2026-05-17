@@ -16,8 +16,6 @@ char       g_assertExpr_nGt0[8] = { 'n', ' ', '>', ' ', '0', '\0', '\0', '\0' };
 
 char s_assertDisable_CheckWindingInPlane;
 char s_assertDisable_RemoveDuplicatePoints;
-char s_assertDisable_RemoveDuplicatePoints;
-char s_assertDisable_RemoveDuplicatePoints;
 
 
 /*

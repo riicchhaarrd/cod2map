@@ -7,8 +7,6 @@ Reconstructed from cod2map.exe by Rose.
 #include "cod2map.h"
 
 char s_assertDisable_LeakFile;
-char s_assertDisable_LeakFile;
-char s_assertDisable_PortalLeakFile;
 char s_assertDisable_PortalLeakFile;
 
 
@@ -36,7 +34,7 @@ int LeakFile(Tree_t *tree)
   Com_DPrintf("--- LeakFile ---\n");
   leakFileWritten = 1;
 
-  sprintf(filename, "%s.lin", g_outputBasePath);
+  Com_sprintf(filename, sizeof(filename), "%s.lin", g_outputBasePath);
   fp = fopen(filename, "w");
   if ( !fp )
     Com_Error("Couldn't open %s\n", filename);
@@ -151,7 +149,7 @@ int PortalLeakFile(Tree_t *tree, Portal_t *portal)
   for ( floodDist = 0; !FloodLeakPath_r(tree->headnode, target, floodDist); floodDist++ )
     ;
 
-  sprintf(filename, "%s.lin", g_outputBasePath);
+  Com_sprintf(filename, sizeof(filename), "%s.lin", g_outputBasePath);
   fp = fopen(filename, "w");
   if ( !fp )
     Com_Error("Couldn't open %s\n", filename);

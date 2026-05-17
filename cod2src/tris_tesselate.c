@@ -27,22 +27,11 @@ int g_tessClipEarTable[NUM_TESS_CLIP_EAR_PASSES * 2] = {
 };
 
 char s_assertDisable_SetupTriSide;
-char s_assertDisable_SetupTriSide;
-char s_assertDisable_TesselateCheckEarValidity;
-char s_assertDisable_TesselateCheckEarValidity;
-char s_assertDisable_TesselateCheckEarValidity;
-char s_assertDisable_TesselateCheckEarValidity;
-char s_assertDisable_TesselateCheckEarValidity;
 char s_assertDisable_TesselateCheckEarValidity;
 char s_assertDisable_TesselateClipEar;
-char s_assertDisable_TesselateClipEar;
 char s_assertDisable_TesselateFixIntersections;
-char s_assertDisable_TesselateFixIntersections;
-char s_assertDisable_TesselateFixIntersections;
-char s_assertDisable_TesselateRemoveDegenerateEdges;
 char s_assertDisable_TesselateRemoveDegenerateEdges;
 char s_assertDisable_TesselateRemoveVertex;
-char s_assertDisable_TesselateWinding;
 char s_assertDisable_TesselateWinding;
 
 

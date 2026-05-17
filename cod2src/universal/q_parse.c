@@ -17,8 +17,6 @@ char       *punctuation[15] =
 };
 
 char s_assertDisable_Com_RestoreParserState;
-char s_assertDisable_Com_RestoreParserState;
-char s_assertDisable_Com_SaveParserState;
 char s_assertDisable_Com_SaveParserState;
 char s_assertDisable_ParseToken;
 

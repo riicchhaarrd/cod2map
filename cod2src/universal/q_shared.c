@@ -31,21 +31,14 @@ float         vec3_origin_float[3] = {0.0f, 0.0f, 0.0f};
 
 char s_assertDisable_COM_GetExtension;
 char s_assertDisable_I_stricmpWild;
-char s_assertDisable_I_stricmpWild;
 char s_assertDisable_I_strncat;
 char s_assertDisable_I_strncpyz;
-char s_assertDisable_I_strncpyz;
-char s_assertDisable_I_strncpyz;
-char s_assertDisable_MatrixTransformVector43;
 char s_assertDisable_MatrixTransformVector43;
 char s_assertDisable_MatrixTransposeTransformVector;
 char s_assertDisable_MatrixVecScaleAddTransform43;
 char s_assertDisable_Q_strcmp;
-char s_assertDisable_Q_strcmp;
-char s_assertDisable_Q_stricmp;
 char s_assertDisable_Q_stricmp;
 char s_assertDisable_TransformPlane;
-char s_assertDisable_TransformPoint;
 char s_assertDisable_TransformPoint;
 
 
@@ -553,9 +546,16 @@ int Com_sprintf(char *dest, size_t size, const char *format, ...)
   int result;
   va_list va;
 
+  if ( !dest || !size )
+    return 0;
+
   va_start(va, format);
   result = _vsnprintf(dest, size, format, va);
-  dest[size - 1] = 0;
+  va_end(va);
+
+  dest[size - 1] = '\0';
+  if ( result < 0 || (size_t)result >= size )
+    result = (int)strlen(dest);
   return result;
 }
 
@@ -626,16 +626,22 @@ Variable-argument string formatter with circular buffer.
 char *va(const char *format, ...)
 {
   unsigned int len;
+  int written;
   int index;
   char *result;
   va_list ArgList;
 
   va_start(ArgList, format);
-  len = _vsnprintf(g_vaBuffer, VA_CIRCULAR_BUF_SIZE, format, ArgList);
+  written = _vsnprintf(g_vaBuffer, VA_CIRCULAR_BUF_SIZE, format, ArgList);
+  va_end(ArgList);
+
+  if ( written < 0 || written >= VA_CIRCULAR_BUF_SIZE )
+    Com_ErrorLevel(1, "Attempted to overrun string in call to va()\n");
+
+  len = (unsigned int)written;
+  g_vaBuffer[len] = '\0';
   g_vaTerminator = 0;
   fix_exponent_format(g_vaBuffer, &len);
-  if ( len >= VA_CIRCULAR_BUF_SIZE )
-    Com_ErrorLevel(1, "Attempted to overrun string in call to va()\n");
   index = g_vaBufferIdx;
   if ( (int)(g_vaBufferIdx + len) >= VA_BUFFER_SIZE )
   {
@@ -780,7 +786,7 @@ char Info_RemoveKey(const char *s, const char *key)
       found = (char *)(intptr_t)strcmp(key, keyBuf);
       if ( !found )
       {
-        strcpy(start, p);
+        memmove(start, p, strlen(p) + 1);
         return (char)(intptr_t)found;
       }
       if ( !*p )
@@ -850,7 +856,7 @@ char Info_RemoveKey_Big(const char *s, const char *key)
       found = (char *)(intptr_t)strcmp(key, keyBuf);
       if ( !found )
       {
-        strcpy(start, p);
+        memmove(start, p, strlen(p) + 1);
         return (char)(intptr_t)found;
       }
       if ( !*p )
@@ -1042,13 +1048,15 @@ I_strncat
 Safe string concatenation with size limit.
 ================
 */
-char *I_strncat(const char *dest, int size, char *src)
+char *I_strncat(char *dest, int size, const char *src)
 {
   int len;
 
+  Assert(dest, s_assertDisable_I_strncat);
+  Assert(src, s_assertDisable_I_strncat);
   Assert(size != sizeof(char *), s_assertDisable_I_strncat);
   len = (int)strlen(dest);
   if ( len >= size )
     Com_ErrorLevel(0, "I_strncat: already overflowed");
-  return I_strncpyz((char *)&dest[len], src, size - len);
+  return I_strncpyz(&dest[len], src, size - len);
 }

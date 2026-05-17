@@ -23,26 +23,12 @@ intptr_t s_hunkData;
 int      s_hunkTotal;
 
 char s_assertDisable_Hunk_AllocAlign;
-char s_assertDisable_Hunk_AllocAlign;
-char s_assertDisable_Hunk_AllocAlign;
-char s_assertDisable_Hunk_AllocAlign;
-char s_assertDisable_Hunk_AllocAlign;
-char s_assertDisable_Hunk_AllocLowAlign;
-char s_assertDisable_Hunk_AllocLowAlign;
-char s_assertDisable_Hunk_AllocLowAlign;
-char s_assertDisable_Hunk_AllocLowAlign;
 char s_assertDisable_Hunk_AllocLowAlign;
 char s_assertDisable_Hunk_AllocateTempMemory;
-char s_assertDisable_Hunk_AllocateTempMemory;
 char s_assertDisable_Hunk_CheckTempMemoryHigh;
-char s_assertDisable_Hunk_CheckTempMemoryHigh;
-char s_assertDisable_Hunk_CheckTempMemoryHigh;
-char s_assertDisable_Hunk_CheckTempMemoryLow;
-char s_assertDisable_Hunk_CheckTempMemoryLow;
 char s_assertDisable_Hunk_CheckTempMemoryLow;
 char s_assertDisable_Hunk_Clear;
 char s_assertDisable_Hunk_ClearTempMemory;
-char s_assertDisable_Hunk_FreeTempMemory;
 char s_assertDisable_Hunk_FreeTempMemory;
 char s_assertDisable_Hunk_PurgeFreeListRange;
 
@@ -334,7 +320,7 @@ char *CopyStringHunk(const char *str)
     Com_Memset(copy, 0, len);
   else
     Z_MallocFailed(len);
-  strcpy(copy, str);
+  memcpy(copy, str, len);
   return copy;
 }
 

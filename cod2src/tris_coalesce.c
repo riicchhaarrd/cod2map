@@ -15,27 +15,12 @@ CoalesceBspNode_t  *coalesceTreeRoot;
 TriSurf_t         **coalesceSurfListHead;
 
 char s_assertDisable_ClipSurfToWinding;
-char s_assertDisable_ClipSurfToWinding;
-char s_assertDisable_ClipSurfToWinding;
-char s_assertDisable_CoalesceChainMatchesArray;
-char s_assertDisable_CoalesceChainMatchesArray;
 char s_assertDisable_CoalesceChainMatchesArray;
 char s_assertDisable_CollectCoalesceLeaves;
-char s_assertDisable_FindOrCreateCoalescedSurfProps;
 char s_assertDisable_FindOrCreateCoalescedSurfProps;
 char s_assertDisable_FreeCoalesceTree;
 char s_assertDisable_InitBspLeafNode;
 char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_MergeCoplanarSurfs;
-char s_assertDisable_ValidateVisGroupList;
-char s_assertDisable_ValidateVisGroupList;
 char s_assertDisable_ValidateVisGroupList;
 
 

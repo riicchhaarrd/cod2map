@@ -7,12 +7,8 @@ Reconstructed from cod2map.exe by Rose.
 #include "cod2map.h"
 
 char s_assertDisable_EmitBrushes;
-char s_assertDisable_EmitBrushes;
 char s_assertDisable_EndBSPFile;
 char s_assertDisable_RemapBrushSidePlanes;
-char s_assertDisable_RemapBrushSidePlanes;
-char s_assertDisable_RemapBrushSidePlanes;
-char s_assertDisable_RemapNodePlanes;
 char s_assertDisable_RemapNodePlanes;
 
 
@@ -42,7 +38,7 @@ int EmitMaterial(const char *materialName, int surfaceFlags)
   if ( i == MAX_MAP_MATERIALS )
     Com_Error("MAX_MAP_MATERIALS");
   ++numBSPMaterials;
-  strcpy(bspMaterials[i].material, materialName);
+  I_strncpyz(bspMaterials[i].material, materialName, sizeof(bspMaterials[i].material));
   _strlwr(bspMaterials[i].material);
   bspMaterials[i].surfaceFlags = LoadMaterial(materialName)->surfaceFlags;
   bspMaterials[i].contentFlags = surfaceFlags;
@@ -468,7 +464,7 @@ int EndBSPFile(void)
   UnparseEntities();
   Tris_ReorderDrawVerts();
   ext = GetBSPFileExtension();
-  sprintf(path, "%s%s", g_outputBasePath, ext);
+  Com_sprintf(path, sizeof(path), "%s%s", g_outputBasePath, ext);
   Com_Printf("Writing %s\n", path);
   Assert(g_targetPlatform, s_assertDisable_EndBSPFile);
   return WriteBSPFile(path, g_targetPlatform->bigEndian);

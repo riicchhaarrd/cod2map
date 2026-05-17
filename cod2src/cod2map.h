@@ -1,96 +1,8 @@
-/*                                                             :oo::::ooooooOOOO@@@OOOOOOoooo:::.
-                                                             :oOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@OOo:
-                                                          .oO@@@@@@@@@@@@@@@@@@OO@@@@@@@@@@@@@@@@@@@@@@OOo:
-                                                      .:oO@@@@@@@@@@@@@@@OOOOOOOOO@@@@@@@@@@@@OOOOOO@@@@@@@@OOo
-                                                  .:oOO@@@@@@@@@@@@@@@@@@@@@OOOOoO@@@@@@@@@@OOOOOOOoOOOooOOO@@@@O:
-                                               .:oO@@@@@@@@@@@@@@@@@@@@@OOOooooo:ooO@@@@OOOOOOOooOOooooooOooOO@@@@o.
-                                            .:oO@@@@@@@@@@@@@@@@@@@@@OOOOOOOOOOOooOOOOOOOOOOoooooooooooo:oooOoO@O@@O:
-                                          .:oO@@@@@@@@@@@@@@@@@@@@@OooOO@@@@OOOoOO@@@@OOOoooooooo::::oooo:::ooOOOOO@O:
-                                        ..:oO@@@@@@@@@@@@@@@@@@@OOoOOO@@@@OooOoooooOOoOOOOOOooo:::::::::ooo:::ooOoo@@Oo
-                                       .::oO@@@@@@@@@@@@@@@@@@OOOOOOO@@Oooooooooooo:o:::::::oo::oo:::::::ooo::::ooOo@@Oo.
-                                     ..::oO@@@@@@OOOO@@@@@@@OOOOOOooOOooOOOOooooooooooo:::....:::::::::::.:o:::.::ooo@@@o.
-                                    ..::ooO@@@@OoooO@@OOOO@@OO@Oo:oOooOOOOOoooooo:oo::o::.......:...::::o:.:o:::..ooooO@@O.
-                                     .::oO@@@@OoooOOooOOOOOOOOo:oOooOO@@OOooo::::oooo::::..    ......::::::::::::..ooo:o@@O:
-                                      .:oO@@@OooOOo:oo:oOOOo:::oo:oO@@OOo::.::::::o:::::....      .:. ...::.::::::..::oooO@@:
-                                      .:o@@OoooOo:::::oOOo..:::::oOOooo:....::::::oo::::.....      .:. ...::::::::::.::oooO@O:
-                                      :oO@O::ooo:::::ooo: .:..::ooOOoo:::::::::::ooooo::...  ..      :. ...:::..::.:::.::o:O@O:
-                                     .oO@O::oo::o::.::::.......:ooo:.....::::oooooOOOoo::...   ...    :. ....::.....:::.::::o@@:
-                                    .oO@O::oo:::::.:::........:::  ..::::::oooOOOOOOOOooo::.......  . .:. .....:.....:::.:::::O@:
-                                   .oO@Ooooo:::....:..  ..  ::.  .:oooooooOOOOOO@@@@@@OOOOoo::... ..   .. .. :..:.....:::::::::OO.
-                                   :O@Ooo::::.....:.   ..  ..  .::oooOOOOOOO@@@@@@@@@@@@@OOOOo::.. ...  .. . ........  :::::::.:oO.
-                                  :O@Ooo:........:. ..    ..   .:ooOO@@@@@@@@@@@@@@@@@@@@@@@OOOo:..  .. .. .. .. ..... .:::::::..oO
-                                 :O@Ooo:........:. .     ..   .:oOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO:... .. ....  .. ....  ..:.::.:::oO:
-                               .oOOooo:... ......       ..   .:oOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo:.. . ..... ... .. ..  .:.::.:::oo
-                              :o@Oooo. ..  ......       .   .:ooOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo:.  . ....  ... .. ..  .:.::..::oo
-                            :oOOOooo:...  ......       .    ::oOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo:  .   ..  .... .  .   ...:...::oo
-                           :OO@OOoo....   .....        .   .:ooOOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@O:. ..  ..  ..... .  .   ..::....:oo
-                         .:OOOOOo:. ..    ...:.       .   ..:ooOOOOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo. ..  ..   ....  .     ...:.....:oo
-                        .oO@@OOo:....     . .:.       .   .::ooOOOOOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo: ..   ..  .....        ...:...:..oo
-                       .oOO@OOO:.:...     ..:..      ..   .:oooOOOOOOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo:. .   ... .....        . ..:..:o..o:
-                      .oO@@OOO:......    ..:...      .    .:ooOOOOOOOOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo:. ..   ..  ....          ..:...:o.:o:
-                    .:oO@@@OO..::...     ..:. .      .    .:oOOOOOOOOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@@OO:. ..   ..  ....         . ..:...o:.oo.
-                    :oO@@@@O:.::: :.     .:...       .    .:oooooOOOOOOO@@@@@@@@@@@@@@@@@@@@@@@@@@@OOo.  ..    .  .....        . ........:.:.
-                   .oO@@@@O:::::. .      .. .       .       . .........:::ooOO@@@@@@@@@@@@@@@OOOo::..     .    .. .. ..           .......:..:
-                  .:O@@@@@oo::::. ..     :.  .          .   ..:oooo::::::::::oOO@@@@@@@@@@OOooo:::::oo::....   .  ..  .           ....:..::::
-                  :O@@@@@O:o::::.       .:.  .         .....:oooOOOOOOOOOOOOoooOO@@@@@@@@@OOOOOOooo:::.. ...   .  ... .           .........:::
-                  o@@@@@@Ooo::o:.    .  ..  ..         .:....:...     ....:oooooOOO@@@@@@@@OOo:..          .    .  .. ..           ..::..:.:::.
-                 :O@@@@@@OoO::o..    .. ..  ..         :::....   :.   ..oo:..:::ooO@@@@@@@OOo:.:O.  .  :.  ..      ..  .           ..::.:..::::
-                 o@@@@@@OO:oo.o:.     ..... .          :ooo:::..:::.  .o@@o:::o::oO@@@@@@OOOoooooo...... ..         .  .           ...:.:...: .  .
-                .O@@@@@@OOo:o:::.   ... ...           .ooooooooooooooooOooOOOOooooO@@@@@@@@@@@OOooooooo:....           .            ..:::...:.  .::.
-                :@@@@@@@OOo:::::..   .:....  .        .:ooooOOOOOOOOOOOOOOOOOOoooO@@@@@@@@@@@@@@OOOOOooo:...           .            ..::. ..::    ::.
-                :@@@@@@@OOOo:::::.   .:....           .::oooOOOOOOOOOOOOOOOOOOOOOO@@@@@@@@@@@@@@@@@OOOooo:..                       ...::  ..::    .::
-                :@@@@@@@OOOOoo::..   .:...            .:::oooOOOOO@@@@@OOOOOOOOOOO@@@@@@@@@@@@@@@@@@OOOoo::..                      ...::. ..:: .. ..:
-                .O@@@@@@OOOOoo:::.   .:...             .::oooOOOO@@@@@@@OOOOOOOOO@@@@@@@@@@@@@@@@@@@@OOOoo:.. .                   . .::: ...:o.  :..:
-                 :O@@O@@@OOOooo:o:.   .. .             .:::ooOOOO@@@@@OOOOOOOOoOO@@@@@@@@@@@@@@@@@@@@@@Ooo:..                    ....:o.  ...:  ::::.
-                  :OOO@@OOOOOOO::o.       .             ..:ooOOOOOOOOOOOOOoooOOO@@@@@@@@@@@@@OOOOOO@@@@@Oo::.                    .....::....:::::::.
-                   oOOOOOOOOOOOo          .            . ..:ooOOOOOOOOOOOOo:O@@OO@@@@@@@@@@@@@@@OOOOO@@OOo::.                  ....  ..:::.::::::.          ..
-                  .:ooOOOOOOOOO@Oo..   :                  ..:ooOOOOOOOOOOOOooooo::oO@@@@@@O@@@@@@@OOOOOOOo::.                 ..     .:.::.:o: .: :      :o ..
-                   .oOooOOOOOOOOOOo.::oo                .  ..:oooOOOOOOOOOOOooo::::oOO@@@@@@@@@@@@@OOOOOoo:...               :::. . .::::..oo:::. @Oooo     ..
-                    :oooooooOOoooOO.Oo::                 . ..::oooOOOOOOOOOOOOOOoOOOOOO@@@@@@@@@@@@OOOOOoo::..               .o:......:::.:::::..        ::::
-                    .:o:oooooooo::: ::::.                ....::ooOOoOOoooOOOOOOOOO@@@OO@@@@@@@@@@OOoOOOOoo::..                ... ......:::..::oooooo:::oo:.
-                     .o::::ooooo:..  .::..                ....:ooOOoOOo..::oooooooooOOOOOOOOOOOoooooOOOOoo::.                  ...   ...:::..  .:oooo::::. 
-                      .oo::::::::::.    .:.                ...::ooOOOOOo:..:..:o:oooooOOOOOoooOOO@@@OOOOoo:..                  .::.    ....::::.....:::.  ..
-                       .oo:::::::::o::......                .:::ooOOOOOOOoo::ooOoOO@OO@OOOOOOO@@@@@@@OOOo::.             .      ...  ....     ..:::::
-                        :oo:::::::::::::.                    .:::oooooOOOOOoo:ooooOOOOOOO@@@@@@@@@@@@OOoo:.                      ..::::..::     .::o:  ..
-                         :::..:::::::::::                     .::::ooooOOOOOOOoooooOOOOOOO@@@@@@@@@@@OOo:.                        .::  ......::::oo:...:.
-                          .:.  ...:::::::.                      .:::ooooOOOOOOOOOOOOOOO@@@@@@@@@@@@@@Oo:.               :..         ...   ...::::::.::.
-                           ....   ..:::oo:.                      ..:::oooOOOOOOOOO@@@@@@@@@@@@@@@@@@Oo. .              .::....      .........:.... 
-                             ....     ..:o:..                      ...::ooOOO@@@@@@@@@@@@@@@@@@@@@@O:.                  :.   .:.     .......:..::::. :.
-                               ....     .o::.......                   ..:oOO@@@@@@@@@@@@@@@@@@@@@@o..                   .....   .....  .    .::::o:
-                                  ...     :.. .....                  ....::oO@@@@@@@@@@@@@@@@@@@O:       .                    ..:::.:....:::::::::
-                                ....          ..                      ..:::::oOO@@@@@@@@@@@@@@Oo.....                ...     ........ ....::.::
-                            .:::::..                                .::::ooOoooooooOOOOOOOOoooo:oooo.          .     :::.....      .::..::      ::
-                          .:oo::.                                    .:ooooOOOOOOOOoooooooooooooooo:           .   . .... ..     ..  :::.... ::
-                        .ooo..                                         .:oOOOOOOOOOOOOOOOOOOOOOOoo:.  ..     .  ..   .. ...    ....   .::..
-                     :ooo....:ooo::.                 .::ooo::..           .oOOOOOOOOOOOOOOOOOOOOoo:    .               .:......      :   .
-                    :o:..:ooOooo::........              .:ooOOOOoo:.        .oO@OOOOOOOOOOOOOOOoo:           .      .. .....    .:     :
-                   oo:oOOOoo:::::::::::::.                   .:ooooooo:.      .:OOOOOOOOOOOOOOOO:                .. ......
-                .:oOooo:::::oo::::::::::..                         .......        :oOO@OOOOOOOO:
-             .:oooo:::::.......:::oo::::..                                    ...    .:oO@@OOO:
-            :oooo:::::::::::.......:::::..                                       ...     :oOO:
-          .ooo::::...............      ....                                         :Oo     ..      ...          ...
-         :Oo::................                                                       ..             oo:          ...::.
-        :o::.............                                                                                         ....::::..
-       :o::.........                                                                                               .....:::::::..
-      .oo:.........                                                                                                  .......:::::::::..
-      :o::.......                                                                                                      ...........:::::::::.
-     ::::.....                                                                                                            ................:::...
-     :o:.....                                                                                                                  ...................
-     :::...                                                                                                                           .......... ..
-    .::...                                                                                                                                   .... ..
-    :::..                                                                                                                                          ..
-    .::..                                                                                                                                            .
-   ..::.                                                                                                                                       .....  .
-   ..:..                                                                                                                                  ....         .
-   .....                                                                                                                                                .*/
-
-/* -------------------------------------------------------------------------------
-
-Cod2map.h - Master header for CoD2 map compiler
-
-Created by Rose.
-
-------------------------------------------------------------------------------- */
+/*
+ * cod2map.h - Master header for CoD2 map compiler.
+ *
+ * Reconstructed from cod2map.exe by Rose.
+ */
 
 
 
@@ -106,23 +18,20 @@ Dependencies
 
 ------------------------------------------------------------------------------- */
 
-#include <windows.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <io.h>
-#include <direct.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <float.h>
 #include <time.h>
-#include <corecrt_stdio_config.h>
 
+#include "platform_compat.h"
 #include "zlib.h"
 #include "unzip.h"
 
@@ -2771,7 +2680,7 @@ int CoalesceLeafInsert(CoalesceBspNode_t *leafNode, TriSurf_t *surfPtr);
 int CollectCoalesceLeaves(uintptr_t surfProps, intptr_t *outArray, int propsCount, int *groupCallback);
 CoalesceNode_t *BuildCoalesceChain(intptr_t *array, int count);
 int InitBspLeafNode(CoalesceBspNode_t *bspNode, CoalesceSurfListNode_t *surfList);
-void FreeCoalesceTree(void *node);
+void FreeCoalesceTree(CoalesceBspNode_t *node);
 CoalesceBspNode_t *BuildCoalesceBspNode(float *mins, float *maxs, CoalesceSurfListNode_t *surfList, int surfCount);
 CoalesceBspNode_t *BuildCoalesceBspTree(TriSurf_t **listHead);
 int FindAndMergeSurfInLeaf(CoalesceBspNode_t *leafNode, TriSurf_t *targetSurf);
@@ -2840,6 +2749,7 @@ int RemoveDuplicateLoops(int ptCount, int auxElemSize, int *indices, intptr_t au
 int SnapAndMergeWinding(int firstVert, int ptCount, int *indexMap, int *outIndices, char *auxData, int auxElemSize);
 
 /* Tris_tesselate.c */
+struct TessSplitPoint_s;
 int TessSplitPointCompare(struct TessSplitPoint_s *splitA, struct TessSplitPoint_s *splitB);
 void SetupTriSide(float *vertA, float *vertB, int axisX, int axisY, double *side);
 bool TriSideCheck(double *side0, int axisY, double *side2, double *side1, float *vert, int axisX);
@@ -3180,7 +3090,7 @@ float *TransformPoint(float *dst, float *src, float *out);
 float *MatrixVecScaleAddTransform43(float *mat, float scale, float *in, float *out);
 float *TransformPlane(float *matrix, float scale, float *inPlane, float *outPlane);
 char *I_strncpyz(char *dest, const char *src, int destsize);
-char *I_strncat(const char *dest, int size, char *src);
+char *I_strncat(char *dest, int size, const char *src);
 
 /* Universal/tangentspace.c */
 void TangentSpaceCalcTBForTriangle(float *pos0, float *pos1, float *pos2, float *uv0, float *uv1, float *uv2, float *tangent, float *bitangent);
@@ -3537,8 +3447,7 @@ extern char           g_heapPool4[HEAP_POOL_LARGE];
 extern char           g_heapPool5[HEAP_POOL_LARGE];
 extern char           g_heapPool6[HEAP_POOL_LARGE];
 extern char           g_largeBuf[HEAP_POOL_LARGE];
-extern char           g_loadFromPath;
-extern char           g_mapFileExtCheck[4];
+extern char           g_loadFromPath[MAX_OS_PATH];
 extern char           g_mapSourceFile[MAX_OS_PATH];
 extern char           g_ospath[MAX_OS_PATH];
 extern char           g_outputBasePath[MAX_OS_PATH];

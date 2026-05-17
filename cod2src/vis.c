@@ -873,7 +873,7 @@ int VisMain( int argc, char **argv )
     }
     else if ( !strcmp( argv[i], "-tmpin" ) )
     {
-      strcpy( visTmpDir, "/tmp" );
+      I_strncpyz( visTmpDir, "/tmp", sizeof(visTmpDir) );
     }
     else if ( !_stricmp( argv[i], "-platform" ) )
     {
@@ -898,17 +898,17 @@ int VisMain( int argc, char **argv )
   FS_Startup_Simple();
 
   /* load the BSP */
-  sprintf( bspPath, "%s%s", visTmpDir, ExpandArg( argv[i] ) );
+  Com_sprintf( bspPath, sizeof(bspPath), "%s%s", visTmpDir, ExpandArg( argv[i] ) );
   StripExtension( bspPath );
-  strcat( bspPath, GetBSPFileExtension() );
+  I_strncat( bspPath, sizeof(bspPath), GetBSPFileExtension() );
   Com_Printf( "reading %s\n", bspPath );
   LoadBSPFile( bspPath );
   ParseEntities();
 
   /* load the portal file */
-  sprintf( prtPath, "%s%s", visTmpDir, ExpandArg( argv[i] ) );
+  Com_sprintf( prtPath, sizeof(prtPath), "%s%s", visTmpDir, ExpandArg( argv[i] ) );
   StripExtension( prtPath );
-  strcat( prtPath, GetPRTFileExtension() );
+  I_strncat( prtPath, sizeof(prtPath), GetPRTFileExtension() );
   Com_Printf( "reading %s\n", prtPath );
   LoadPortals( prtPath );
 

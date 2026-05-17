@@ -54,26 +54,11 @@ float  g_smViewProjMatrix_32;
 float  g_smViewProjMatrix_33;
 
 char s_assertDisable_SM_AddCasterTriangle;
-char s_assertDisable_SM_AddCasterTriangle;
-char s_assertDisable_SM_CreateFragment;
-char s_assertDisable_SM_CreateFragment;
 char s_assertDisable_SM_CreateFragment;
 char s_assertDisable_SM_FlattenSurfToWinding;
 char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InitOccluder;
-char s_assertDisable_SM_InterpolateVert;
-char s_assertDisable_SM_InterpolateVert;
 char s_assertDisable_SM_InterpolateVert;
 char s_assertDisable_SM_ProjectPoint;
-char s_assertDisable_SM_ProjectPoint;
-char s_assertDisable_SM_ProjectPoint;
-char s_assertDisable_SM_ProjectWindingThroughOccluders;
 char s_assertDisable_SM_ProjectWindingThroughOccluders;
 char s_assertDisable_SM_RayPlaneIntersect;
 char s_assertDisable_SM_RestoreSurfFromWinding;
@@ -81,13 +66,6 @@ char s_assertDisable_ShadowMid_ClipWindingByOccluders_r;
 char s_assertDisable_ShadowMid_FindBestNotch;
 char s_assertDisable_ShadowMid_FixTJunctions;
 char s_assertDisable_ShadowMid_IsConvex;
-char s_assertDisable_ShadowMid_IsConvex;
-char s_assertDisable_ShadowMid_IsConvex;
-char s_assertDisable_ShadowMid_IsConvex;
-char s_assertDisable_ShadowMid_IsConvex;
-char s_assertDisable_ShadowMid_IsConvex;
-char s_assertDisable_ShadowMid_IsConvex;
-char s_assertDisable_ShadowMid_PlugNotchesInWinding;
 char s_assertDisable_ShadowMid_PlugNotchesInWinding;
 char s_assertDisable_ShadowMid_Shutdown;
 char s_assertDisable_ShadowMid_WindingBehindPlane;
@@ -895,13 +873,12 @@ char ShadowMid_AlwaysAccept(void)
 
 /*
 ================
-ShadowMid_TryMergeConcavePair
+ShadowMid_TryMergePair
 
-Tries to merge a primary shadow caster with subsequent casters that
-share edges. Handles swap, splice, and boundary removal cases.
+Shared implementation used by concave-caster merging and notch plugging.
 ================
 */
-int ShadowMid_TryMergeConcavePair(int primaryIdx, TriSurf_t **surfArray, IntWinding_t **windingArray, int count, int auxStride)
+static int ShadowMid_TryMergePair(int primaryIdx, TriSurf_t **surfArray, IntWinding_t **windingArray, int count, int auxStride)
 {
   IntWinding_t *primaryWinding, *secondaryWinding, *splicedWinding;
   TriSurf_t *primarySurf, *secondarySurf;
@@ -978,6 +955,19 @@ int ShadowMid_TryMergeConcavePair(int primaryIdx, TriSurf_t **surfArray, IntWind
 
 /*
 ================
+ShadowMid_TryMergeConcavePair
+
+Tries to merge a primary shadow caster with subsequent casters that
+share edges. Handles swap, splice, and boundary removal cases.
+================
+*/
+int ShadowMid_TryMergeConcavePair(int primaryIdx, TriSurf_t **surfArray, IntWinding_t **windingArray, int count, int auxStride)
+{
+  return ShadowMid_TryMergePair(primaryIdx, surfArray, windingArray, count, auxStride);
+}
+
+/*
+================
 ShadowMid_TryMergeNotchPair
 
 Tries to merge two shadow casters for notch plugging. Handles
@@ -986,77 +976,7 @@ swap, splice, and boundary removal cases for notch pairs.
 */
 int ShadowMid_TryMergeNotchPair(int primaryIdx, TriSurf_t **surfArray, IntWinding_t **windingArray, int count, int auxStride)
 {
-  IntWinding_t *primaryWinding, *secondaryWinding, *splicedWinding;
-  TriSurf_t *primarySurf, *secondarySurf;
-  int innerIdx, sharedEdgeCount, adjustedIdxA;
-  int sharedIdxA, sharedIdxB;
-
-  primaryWinding = windingArray[primaryIdx];
-
-  for ( innerIdx = primaryIdx + 1; innerIdx < count; )
-  {
-    primarySurf = surfArray[primaryIdx];
-    secondarySurf = surfArray[innerIdx];
-    secondaryWinding = windingArray[innerIdx];
-
-    /* check bounds overlap and shared edges */
-    if ( !BoundsIntersect(primarySurf->mins, primarySurf->maxs, secondarySurf->mins, secondarySurf->maxs)
-      || !(sharedEdgeCount = FindSharedEdge(primaryWinding, secondaryWinding, &sharedIdxA, &sharedIdxB)) )
-    {
-      innerIdx++;
-      continue;
-    }
-
-    /* if primary is fully shared, swap primary and secondary */
-    if ( sharedEdgeCount == primaryWinding->numpoints )
-    {
-      surfArray[primaryIdx] = secondarySurf;
-      surfArray[innerIdx] = primarySurf;
-      windingArray[primaryIdx] = secondaryWinding;
-      windingArray[innerIdx] = primaryWinding;
-      primaryWinding = windingArray[primaryIdx];
-
-      int swappedB = (sharedIdxA + sharedEdgeCount - 1) % windingArray[innerIdx]->numpoints;
-      adjustedIdxA = (primaryWinding->numpoints - sharedEdgeCount + sharedIdxB + 1) % primaryWinding->numpoints;
-      sharedIdxA = adjustedIdxA;
-      sharedIdxB = swappedB;
-      secondaryWinding = windingArray[innerIdx];
-    }
-    else
-    {
-      adjustedIdxA = sharedIdxA;
-    }
-
-    if ( sharedEdgeCount == secondaryWinding->numpoints )
-    {
-      /* secondary fully contained — remove shared boundary */
-      RemoveSharedBoundaryPoints(primaryWinding, auxStride, adjustedIdxA, sharedEdgeCount);
-      FreeTriSurf(surfArray[innerIdx]);
-      FreeIntWinding(secondaryWinding);
-      count--;
-      memmove(&surfArray[innerIdx], &surfArray[innerIdx + 1], (count - innerIdx) * sizeof(TriSurf_t *));
-      memmove(&windingArray[innerIdx], &windingArray[innerIdx + 1], (count - innerIdx) * sizeof(windingArray[0]));
-    }
-    else
-    {
-      /* partial overlap — splice windings */
-      splicedWinding = SpliceWindingsAtSharedEdge(primaryWinding, secondaryWinding, auxStride, primaryIdx, innerIdx, adjustedIdxA, sharedIdxB, sharedEdgeCount);
-      AddBoundsToBounds(secondarySurf->mins, secondarySurf->maxs, surfArray[primaryIdx]->mins, surfArray[primaryIdx]->maxs);
-      FreeTriSurf(surfArray[innerIdx]);
-      memmove(&surfArray[innerIdx], &surfArray[innerIdx + 1], (count - innerIdx - 1) * sizeof(TriSurf_t *));
-      FreeIntWinding(primaryWinding);
-      FreeIntWinding(secondaryWinding);
-      primaryWinding = splicedWinding;
-      windingArray[primaryIdx] = splicedWinding;
-      count--;
-      memmove(&windingArray[innerIdx], &windingArray[innerIdx + 1], (count - innerIdx) * sizeof(windingArray[0]));
-    }
-
-    windingArray[count] = NULL;
-    innerIdx = primaryIdx + 1;
-  }
-
-  return count;
+  return ShadowMid_TryMergePair(primaryIdx, surfArray, windingArray, count, auxStride);
 }
 
 /*

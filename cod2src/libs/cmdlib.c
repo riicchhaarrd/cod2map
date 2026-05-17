@@ -26,6 +26,8 @@ void *SafeMalloc(int size)
   if ( size % MEM_PAGE_SIZE )
     aligned += MEM_PAGE_SIZE - (size % MEM_PAGE_SIZE);
   ptr = malloc(aligned);
+  if ( !ptr )
+    Z_MallocFailed(aligned);
   memset(ptr, 0, aligned);
   return ptr;
 }
@@ -160,7 +162,7 @@ void DefaultExtension(char *path, const char *extension)
   }
 
   /* append extension */
-  strcat(path, extension);
+  I_strncat(path, MAX_OS_PATH, extension);
 }
 
 /*
@@ -185,7 +187,7 @@ void FS_ExtractBasename(const char *path, char *out)
 
   /* copy basename to output */
   if ( *p )
-    strcpy(out, p);
+    I_strncpyz(out, p, MAX_OS_PATH);
   else
     *out = '\0';
 }
@@ -301,13 +303,13 @@ char *ExpandArg(const char *path)
   /* already absolute */
   if ( *path == '/' || *path == '\\' || path[1] == ':' )
   {
-    strcpy(DstBuf, path);
+    I_strncpyz(DstBuf, path, sizeof(DstBuf));
     return DstBuf;
   }
 
   /* prepend current directory */
   Q_getwd(DstBuf);
-  strcat(DstBuf, path);
+  I_strncat(DstBuf, sizeof(DstBuf), path);
   return DstBuf;
 }
 

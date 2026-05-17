@@ -16,16 +16,7 @@ float *splitMaxsArray;
 float *splitMinsArray;
 
 char s_assertDisable_SelectSplitPlane_BlockSubdivision;
-char s_assertDisable_SelectSplitPlane_BlockSubdivision;
-char s_assertDisable_SelectSplitPlane_BlockSubdivision;
 char s_assertDisable_SelectSplitPlane_DirectEval;
-char s_assertDisable_SelectSplitPlane_EvaluateAxes;
-char s_assertDisable_SelectSplitPlane_EvaluateAxes;
-char s_assertDisable_SelectSplitPlane_EvaluateAxes;
-char s_assertDisable_SelectSplitPlane_EvaluateAxes;
-char s_assertDisable_SelectSplitPlane_EvaluateAxes;
-char s_assertDisable_SelectSplitPlane_EvaluateAxes;
-char s_assertDisable_SelectSplitPlane_EvaluateAxes;
 char s_assertDisable_SelectSplitPlane_EvaluateAxes;
 
 

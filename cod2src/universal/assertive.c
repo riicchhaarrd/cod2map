@@ -13,7 +13,7 @@ AssertStringTable_t *g_assertModuleList;
 
 const char g_assertFmtFuncFile[] = "%s\t\t...%s";
 const char g_assertFmtFuncFileLine[] = "%s\t\t...%s, line %i";
-const char g_assertFmtModule[] = { '%', 's', ':', '\t' };
+const char g_assertFmtModule[] = "%s:\t";
 const char g_assertFmtOOM[] = "Out of memory: filename '%s', line %d\n";
 const char g_assertFmtLineNumbers[] = "%i %x:%x %i %x:%x %i %x:%x %i %x:%x\r\n";
 const char g_assertFmtSymbol[] = "%x:%x %s %x";
@@ -222,10 +222,13 @@ HMODULE Assertive_GetModuleHandle(const char *moduleName)
   HMODULE h;
   CHAR ModuleName[MAX_PATH];
 
+  if ( !moduleName || !*moduleName )
+    return NULL;
+
   nameLen = (unsigned int)strlen(moduleName);
 
   /* scan backwards for '.' extension separator (stop at path separator) */
-  for ( pos = nameLen - 1; pos >= 0; --pos )
+  for ( pos = (int)nameLen - 1; pos >= 0; --pos )
   {
     ch = moduleName[pos];
     if ( ch == '.' || ch == '/' || ch == '\\' )
@@ -233,15 +236,17 @@ HMODULE Assertive_GetModuleHandle(const char *moduleName)
   }
   if ( pos >= 0 && moduleName[pos] == '.' )
     nameLen = pos;
+  if ( nameLen >= sizeof(ModuleName) - 4 )
+    nameLen = sizeof(ModuleName) - 5;
 
   /* try "name.exe" first, then "name.dll" */
   memcpy(ModuleName, moduleName, nameLen);
   extPos = &ModuleName[nameLen];
-  strcpy(extPos, ".exe");
+  I_strncpyz(extPos, ".exe", sizeof(ModuleName) - nameLen);
   h = GetModuleHandleA(ModuleName);
   if ( !h )
   {
-    strcpy(extPos, ".dll");
+    I_strncpyz(extPos, ".dll", sizeof(ModuleName) - nameLen);
     return GetModuleHandleA(ModuleName);
   }
   return h;
@@ -286,7 +291,7 @@ int Assertive_FormatStackFrame(char *buffer, char *hitMain, unsigned int instrAd
   }
 
   /* write "module:\t" prefix */
-  writePos = buffer + sprintf(buffer, g_assertFmtModule, moduleName);
+  writePos = buffer + Com_sprintf(buffer, MAXPRINTMSG, g_assertFmtModule, moduleName);
 
   /* resolve function name from symbol, strip MSVC decoration */
   if ( bestNoLine )
@@ -294,7 +299,7 @@ int Assertive_FormatStackFrame(char *buffer, char *hitMain, unsigned int instrAd
     char *src = bestNoLine->file, *at;
     if ( *src == '_' || *src == '?' )
       src++;
-    strcpy(nameBuf, src);
+    I_strncpyz(nameBuf, src, sizeof(nameBuf));
     at = strchr(nameBuf, '@');
     if ( at ) *at = 0;
     funcName = nameBuf;
@@ -311,18 +316,18 @@ int Assertive_FormatStackFrame(char *buffer, char *hitMain, unsigned int instrAd
   if ( bestWithLine )
   {
     const char *base = strrchr(bestWithLine->name, '\\');
-    writePos += sprintf(writePos, g_assertFmtFuncFileLine, funcName, base ? base + 1 : bestWithLine->name, bestWithLine->lineNum);
+    writePos += Com_sprintf(writePos, MAXPRINTMSG - (writePos - buffer), g_assertFmtFuncFileLine, funcName, base ? base + 1 : bestWithLine->name, bestWithLine->lineNum);
   }
   else if ( bestNoLine )
   {
     const char *base = strrchr(bestNoLine->name, '\\');
-    writePos += sprintf(writePos, g_assertFmtFuncFile, funcName, base ? base + 1 : bestNoLine->name);
+    writePos += Com_sprintf(writePos, MAXPRINTMSG - (writePos - buffer), g_assertFmtFuncFile, funcName, base ? base + 1 : bestNoLine->name);
   }
   else
   {
-    writePos += sprintf(writePos, "%s", funcName);
+    writePos += Com_sprintf(writePos, MAXPRINTMSG - (writePos - buffer), "%s", funcName);
   }
-  writePos += sprintf(writePos, "\n");
+  writePos += Com_sprintf(writePos, MAXPRINTMSG - (writePos - buffer), "\n");
   return (int)(writePos - buffer);
 }
 
@@ -348,7 +353,7 @@ int Assertive_CopyToClipboard(void)
     locked = GlobalLock(hMem);
     if ( locked )
     {
-      strcpy(locked, g_assertMsgBuffer);
+      memcpy(locked, g_assertMsgBuffer, strlen(g_assertMsgBuffer) + 1);
       GlobalUnlock(hMem);
       SetClipboardData(CF_TEXT, hMem);
     }
@@ -397,7 +402,7 @@ AssertHashNode_t *Assertive_AllocSymbol(AssertHashNode_t *node, const char *name
   node->string = str;
   if ( !str )
     Assertive_OutOfMemory(SRCFILE, __LINE__);
-  strcpy(str, name);
+  memcpy(str, name, strlen(name) + 1);
   node->hashValue = hashValue;
   return node;
 }
@@ -649,9 +654,9 @@ void Assertive_LoadMapFiles(char *exeDir)
   WIN32_FIND_DATAA FindFileData;
 
   if ( *exeDir )
-    sprintf(searchPattern, "%s\\*.map", exeDir);
+    Com_sprintf(searchPattern, sizeof(searchPattern), "%s\\*.map", exeDir);
   else
-    strcpy(searchPattern, "*.map");
+    I_strncpyz(searchPattern, "*.map", sizeof(searchPattern));
 
   findHandle = FindFirstFileA(searchPattern, &FindFileData);
   if ( findHandle == INVALID_HANDLE_VALUE )
@@ -664,7 +669,7 @@ void Assertive_LoadMapFiles(char *exeDir)
     if ( !moduleHandle )
       continue;
 
-    strcpy(mapName, FindFileData.cFileName);
+    I_strncpyz(mapName, FindFileData.cFileName, sizeof(mapName));
 
     /* check if this module is already loaded (case-insensitive) */
     for ( existing = g_assertModuleList; existing; existing = existing->next ) {
@@ -676,9 +681,9 @@ void Assertive_LoadMapFiles(char *exeDir)
 
     /* build full path to .MAP file */
     if ( *exeDir )
-      sprintf(mapPath, "%s\\%s", exeDir, FindFileData.cFileName);
+      Com_sprintf(mapPath, sizeof(mapPath), "%s\\%s", exeDir, FindFileData.cFileName);
     else
-      strcpy(mapPath, FindFileData.cFileName);
+      I_strncpyz(mapPath, FindFileData.cFileName, sizeof(mapPath));
 
     mapFile = fopen(mapPath, "rb");
     if ( !mapFile )
@@ -759,18 +764,17 @@ int AssertMessage(const char *expr, const char *file, char *buffer, int line, in
   const char *safeFile;
   const char *safeExpr;
   int written;
-  char unknown[12];
+  char unknown[] = "<unknown>";
 
   safeFile = file;
   safeExpr = expr;
-  strcpy(unknown, "<unknown>");
   if ( !file )
     safeFile = unknown;
   if ( !expr )
     safeExpr = unknown;
   if ( !GetModuleFileNameA(0, Filename, MAX_PATH) )
-    strcpy(Filename, "<unknown application>");
-  written = sprintf(buffer, "Expression:\n\t%s\n\nModule:\t%s\nFile:\t%s\nLine:\t%d\n\n", safeExpr, Filename, safeFile, line);
+    I_strncpyz(Filename, "<unknown application>", sizeof(Filename));
+  written = Com_sprintf(buffer, MAXPRINTMSG, "Expression:\n\t%s\n\nModule:\t%s\nFile:\t%s\nLine:\t%d\n\n", safeExpr, Filename, safeFile, line);
   return Assertive_WalkStack(&buffer[written], ASSERT_MAX_FRAMES, skipFrames + 1);
 }
 
@@ -812,7 +816,7 @@ int AssertFailed(const char *expr, const char *file, int line, int severity, int
 
     MessageBoxA(NULL, g_assertBuf, caption, MB_OKCANCEL | MB_ICONHAND | MB_TASKMODAL | MB_SETFOREGROUND);
 
-    sprintf(g_assertBuf, "Expression:\n\t%s\n\nModule:\t%s\nFile:\t%s\nLine:\t%d\n\n", expr, g_assertModulePath, file, line);
+    Com_sprintf(g_assertBuf, sizeof(g_assertBuf), "Expression:\n\t%s\n\nModule:\t%s\nFile:\t%s\nLine:\t%d\n\n", expr, g_assertModulePath, file, line);
     Com_Printf("ASSERTBEGIN - ( Recursive assert )-----------------------------------------------\n");
     Com_Printf("%s", g_assertBuf);
     Com_Printf("ASSERTEND - ( Recursive assert ) ------------------------------------------------\n");
@@ -823,9 +827,9 @@ int AssertFailed(const char *expr, const char *file, int line, int severity, int
   g_assertReentryGuard = 1;
 
   if ( !GetModuleFileNameA(NULL, g_assertModulePath, sizeof(g_assertModulePath)) )
-    strcpy(g_assertModulePath, "<unknown application>");
+    I_strncpyz(g_assertModulePath, "<unknown application>", sizeof(g_assertModulePath));
 
-  sprintf(g_assertBuf, "Expression:\n\t%s\n\nModule:\t%s\nFile:\t%s\nLine:\t%d\n\n", expr, g_assertModulePath, file, line);
+  Com_sprintf(g_assertBuf, sizeof(g_assertBuf), "Expression:\n\t%s\n\nModule:\t%s\nFile:\t%s\nLine:\t%d\n\n", expr, g_assertModulePath, file, line);
 
   Com_Printf("ASSERTBEGIN -----------------------------------------------------------------------\n");
   Com_Printf("%s", g_assertBuf);

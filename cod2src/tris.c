@@ -16,6 +16,7 @@ as triSoup entries.
 
 void (*g_lerpAuxDataCallback)(float *from, float *to, double frac, float *result) = &NullLerpAuxDataCallback;
 
+#ifdef _WIN32
 PFN_D3DXOptimizeFaces    pfn_D3DXOptimizeFaces;
 PFN_D3DXOptimizeVertices pfn_D3DXOptimizeVertices;
 
@@ -25,12 +26,12 @@ void load_d3dx(void) {
     if (d3dx_loaded) return;
     HMODULE hmod = LoadLibraryA("d3dx9_27.dll");
     if (!hmod) {
-        exit(1);
+        Com_Error("Failed to load d3dx9_27.dll; install the legacy DirectX runtime or disable D3DX optimization.\n");
     }
     pfn_D3DXOptimizeFaces = (PFN_D3DXOptimizeFaces)GetProcAddress(hmod, "D3DXOptimizeFaces");
     pfn_D3DXOptimizeVertices = (PFN_D3DXOptimizeVertices)GetProcAddress(hmod, "D3DXOptimizeVertices");
     if (!pfn_D3DXOptimizeFaces || !pfn_D3DXOptimizeVertices) {
-        exit(1);
+        Com_Error("d3dx9_27.dll is missing D3DXOptimizeFaces/D3DXOptimizeVertices.\n");
     }
     d3dx_loaded = 1;
 }
@@ -44,6 +45,30 @@ int D3DXOptimizeVertices(void* meshData, unsigned int faceCount, unsigned int ve
     load_d3dx();
     return pfn_D3DXOptimizeVertices(meshData, faceCount, vertexCount, adjacency, vertexRemap);
 }
+#else
+PFN_D3DXOptimizeFaces    pfn_D3DXOptimizeFaces = NULL;
+PFN_D3DXOptimizeVertices pfn_D3DXOptimizeVertices = NULL;
+
+int D3DXOptimizeFaces(void* meshData, unsigned int faceCount, unsigned int vertexCount, int adjacency, void* faceRemap) {
+    unsigned int i;
+    (void)meshData; (void)vertexCount; (void)adjacency;
+    if (faceRemap) {
+        int *remap = (int *)faceRemap;
+        for (i = 0; i < faceCount; ++i) remap[i] = (int)i;
+    }
+    return 0;
+}
+
+int D3DXOptimizeVertices(void* meshData, unsigned int faceCount, unsigned int vertexCount, int adjacency, void* vertexRemap) {
+    unsigned int i;
+    (void)meshData; (void)faceCount; (void)adjacency;
+    if (vertexRemap) {
+        int *remap = (int *)vertexRemap;
+        for (i = 0; i < vertexCount; ++i) remap[i] = (int)i;
+    }
+    return 0;
+}
+#endif
 
 DrawVert_t       drawVertBuffer[MAX_MAP_VERTEXES];
 MatSortEntry_t   materialGroupSortTable[MAX_MAP_MATERIALS];
@@ -74,108 +99,41 @@ char s_assertDisable_AuxDataCopy;
 char s_assertDisable_BuildTriSoupAABBTree;
 char s_assertDisable_ClassifyTriVertsByAxis;
 char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
-char s_assertDisable_ClipTriWinding;
 char s_assertDisable_CopyTriSurf;
 char s_assertDisable_CopyVerts;
-char s_assertDisable_CopyVerts;
-char s_assertDisable_CopyVerts;
-char s_assertDisable_EmitPatchSurface;
 char s_assertDisable_EmitPatchSurface;
 char s_assertDisable_EmitTriSoupRecord;
-char s_assertDisable_EmitTriSoupRecord;
-char s_assertDisable_EmitTriSoupRecord;
-char s_assertDisable_EmitTriSoupRecord;
-char s_assertDisable_EmitTriSoupRecord;
-char s_assertDisable_EmitTriSoupRecord;
-char s_assertDisable_EmitTriSoupRecord;
 char s_assertDisable_EmitTriSurfForProps;
-char s_assertDisable_EmitTriSurfForProps;
-char s_assertDisable_EmitTriSurfForProps;
-char s_assertDisable_EmitTriSurface;
-char s_assertDisable_EmitTriSurface;
-char s_assertDisable_EmitTriSurface;
-char s_assertDisable_EmitTriSurface;
 char s_assertDisable_EmitTriSurface;
 char s_assertDisable_EmitTriSurfaceForDrawSurf;
 char s_assertDisable_EmitTriSurface_r;
-char s_assertDisable_EmitTriSurface_r;
-char s_assertDisable_EmitTriangleSoup;
 char s_assertDisable_EmitTriangleSoup;
 char s_assertDisable_FreeVerts;
 char s_assertDisable_GroupAdjacentTris;
 char s_assertDisable_GroupTriSurfsIntoSubgroups;
 char s_assertDisable_GroupTriangles;
-char s_assertDisable_GroupTriangles;
 char s_assertDisable_I_fclamp;
 char s_assertDisable_InsertTriSurfAfter;
-char s_assertDisable_MergeTriGroups;
-char s_assertDisable_MergeTriGroups;
-char s_assertDisable_MergeTriGroups;
-char s_assertDisable_MergeTriGroups;
-char s_assertDisable_MergeTriGroups;
-char s_assertDisable_MergeTriGroups;
-char s_assertDisable_MergeTriGroups;
-char s_assertDisable_MergeTriGroups;
 char s_assertDisable_MergeTriGroups;
 char s_assertDisable_NullLerpAuxDataCallback;
 char s_assertDisable_PrependTriSurf;
 char s_assertDisable_SetTrisTransientMode;
 char s_assertDisable_SmoothVertexNormals;
-char s_assertDisable_SmoothVertexNormals;
 char s_assertDisable_SortTriIndices;
-char s_assertDisable_SortTriIndices;
-char s_assertDisable_SortTriIndices;
-char s_assertDisable_SplitSoupOnAxis;
-char s_assertDisable_SplitSoupOnAxis;
-char s_assertDisable_SplitSoupOnAxis;
-char s_assertDisable_SplitSoupOnAxis;
 char s_assertDisable_SplitSoupOnAxis;
 char s_assertDisable_SplitTrisByClassification;
 char s_assertDisable_TriangulateSurf;
-char s_assertDisable_TriangulateSurf;
-char s_assertDisable_TriangulateSurf;
-char s_assertDisable_TriangulateSurf;
-char s_assertDisable_TrisSnapNearbyVertices;
 char s_assertDisable_TrisSnapNearbyVertices;
 char s_assertDisable_TrisSnapWindingToVertices;
-char s_assertDisable_TrisSnapWindingToVertices;
-char s_assertDisable_TrisSnapWindingToVertices;
-char s_assertDisable_TrisSnapWindingToVertices;
 char s_assertDisable_Tris_CopyVertexToDrawVerts;
-char s_assertDisable_Tris_CopyVertexToDrawVerts;
-char s_assertDisable_Tris_CopyVertexToDrawVerts;
-char s_assertDisable_Tris_EmitTriangles;
 char s_assertDisable_Tris_EmitTriangles;
 char s_assertDisable_Tris_FindNextEntity;
 char s_assertDisable_Tris_FindWindings;
 char s_assertDisable_Tris_ReorderAddSurfaceVerts;
-char s_assertDisable_Tris_ReorderAddSurfaceVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
-char s_assertDisable_Tris_ReorderAndOptimizeVerts;
 char s_assertDisable_Tris_ReorderAndOptimizeVerts;
 char s_assertDisable_Tris_ReorderDrawVerts;
-char s_assertDisable_Tris_ReorderDrawVerts;
-char s_assertDisable_Tris_ReorderTriSurfaces;
-char s_assertDisable_Tris_ReorderTriSurfaces;
-char s_assertDisable_Tris_ReorderTriSurfaces;
 char s_assertDisable_Tris_ReorderTriSurfaces;
 char s_assertDisable_UnlinkAndFreeSurf;
-char s_assertDisable_ValidateTriSurfLmapCoords;
 char s_assertDisable_ValidateTriSurfLmapCoords;
 
 

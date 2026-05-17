@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cod2map WebAssembly demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>cod2map WebAssembly demo</h1>
+    <p class="note">
+      This page runs cod2map locally in the browser. Files remain on this device.
+      Chrome maps a selected Call of Duty 2 folder into a lazy virtual filesystem without copying the whole folder.
+      Firefox uses OPFS as a fallback cache for a selected map/assets subset.
+    </p>
+
+    <section class="panel">
+      <h2>1. Load game files</h2>
+      <div class="actions">
+        <button id="chooseFolder">Chrome: map CoD game folder as lazy VFS</button>
+        <button id="stageFiles">Firefox/portable: stage selected files in OPFS</button>
+        <button id="clearOpfs">Clear OPFS staged VFS</button>
+      </div>
+      <input id="filePicker" type="file" multiple webkitdirectory hidden>
+      <p id="sourceStatus" class="status">No files loaded.</p>
+      <p class="note small">
+        The lazy VFS indexes file names and passes Blob handles to the Wasm worker. File contents are loaded only if cod2map opens them.
+        OPFS staging should contain the selected map plus required assets, not necessarily the full game install.
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>2. Select map</h2>
+      <div class="row">
+        <select id="mapSelect"></select>
+        <button id="refreshMaps">Refresh map list</button>
+      </div>
+      <p class="note small">The compiler normally expects paths such as <code>maps/mp/example.map</code> and game data under the same virtual root.</p>
+    </section>
+
+    <section class="panel">
+      <h2>3. Run compiler</h2>
+      <div class="row">
+        <label><input type="checkbox" id="platformPc" checked> add <code>-platform pc</code></label>
+        <button id="runMap">Run cod2map</button>
+      </div>
+      <p id="runStatus" class="status">Idle.</p>
+      <div id="downloads"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Console</h2>
+      <pre id="console"></pre>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

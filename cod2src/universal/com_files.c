@@ -41,18 +41,11 @@ static char   iwd_wildcard[] = "*.iwd";
 
 char s_assertDisable_FS_HandleForFile;
 char s_assertDisable_FS_FileForHandle;
-char s_assertDisable_FS_FileForHandle;
-char s_assertDisable_FS_FileForHandle;
 char s_assertDisable_FS_filelength;
 char s_assertDisable_FS_SanitizePath;
 char s_assertDisable_FS_BuildOSPathFull;
-char s_assertDisable_FS_BuildOSPathFull;
-char s_assertDisable_FS_BuildOSPathFull;
-char s_assertDisable_FS_FOpenFileRead;
 char s_assertDisable_FS_FOpenFileRead;
 char s_assertDisable_FS_SV_GetFilepath;
-char s_assertDisable_FS_SV_GetFilepath;
-char s_assertDisable_FS_ListFilteredFiles;
 char s_assertDisable_FS_ListFilteredFiles;
 char s_assertDisable_FS_ListFiles;
 char s_assertDisable_FS_AddGameDirectory;
@@ -73,12 +66,12 @@ char *FS_BuildOSPath(char *relativePath)
   /* already absolute path */
   if ( *relativePath == '/' || *relativePath == '\\' || relativePath[1] == ':' )
   {
-    strcpy(g_ospath, relativePath);
+    I_strncpyz(g_ospath, relativePath, sizeof(g_ospath));
     return g_ospath;
   }
 
   /* prepend basepath */
-  sprintf(g_ospath, "%s%s", g_basePath, relativePath);
+  Com_sprintf(g_ospath, sizeof(g_ospath), "%s%s", g_basePath, relativePath);
   return g_ospath;
 }
 
@@ -148,7 +141,7 @@ unsigned int FS_Startup(const char *mapPath)
   }
   else
   {
-    strcpy(g_gameDir, g_gameDirRelative);
+    I_strncpyz(g_gameDir, g_gameDirRelative, sizeof(g_gameDir));
   }
   return i;
 }
@@ -190,10 +183,7 @@ char *FS_ReplacePlatformPath(char *path, char *searchStr, const char *replaceStr
       }
 
       /* build replacement: prefix + replaceStr + suffix */
-      memset(tempBuf, 0, sizeof(tempBuf));
-      strncpy(tempBuf, path, scanPtr - path);
-      strcat(tempBuf, replaceStr);
-      strcat(tempBuf, afterMatch);
+      Com_sprintf(tempBuf, sizeof(tempBuf), "%.*s%s%s", (int)(scanPtr - path), path, replaceStr, afterMatch);
 
       /* convert backslashes to forward slashes in basepath portion */
       for ( i = 0; i < strlen(g_basePath); i++ )
@@ -203,7 +193,7 @@ char *FS_ReplacePlatformPath(char *path, char *searchStr, const char *replaceStr
       }
 
       /* copy result back to path */
-      strcpy(path, tempBuf);
+      I_strncpyz(path, tempBuf, MAX_OS_PATH);
     }
     scanPtr--;
   }
@@ -714,7 +704,7 @@ int FS_ReturnPath(char *zpath, int *depth, char *zname)
 {
   int i, len, newdep;
 
-  strcpy(zpath, zname);
+  I_strncpyz(zpath, zname, MAX_OS_PATH);
 
   len = 0;
   newdep = 0;
@@ -1444,7 +1434,7 @@ Iwd_t *FS_LoadZipFile( char *zipPath, char *basename )
     Q_strlwr( nameBuf );
     hash = FS_HashFileName( nameBuf, pak->hashSize );
     entry->name = namePool;
-    strcpy( namePool, nameBuf );
+    memcpy( namePool, nameBuf, strlen( nameBuf ) + 1 );
     namePool += strlen( nameBuf ) + 1;
 
     { ZPOS64_T pos;
@@ -1543,7 +1533,7 @@ int *FS_ListFilteredFiles(Searchpath_t *searchPaths, const char *path, char *ext
           if ( name[strlen(name) - 1] == '/' )
           {
             prefixLen = pathLen ? pathLen + 1 : 0;
-            strcpy(nameCopyBuf, &name[prefixLen]);
+            I_strncpyz(nameCopyBuf, &name[prefixLen], sizeof(nameCopyBuf));
             nameCopyBuf[strlen(nameCopyBuf) - 1] = 0;
             numFiles = FS_AddFileToList((char **)fileListBuf, numFiles, nameCopyBuf);
           }
@@ -1717,7 +1707,7 @@ void FS_AddIwdFilesForGameDirectory( const char *basepath, char *gamedir )
     if ( !pakFile )
       continue;
 
-    strcpy( pakFile->iwdGamename, gamedir );
+    I_strncpyz( pakFile->iwdGamename, gamedir, sizeof(pakFile->iwdGamename) );
 
     /* allocate search path node and insert into list */
     searchNode = Z_Malloc( sizeof(Searchpath_t) );

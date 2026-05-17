@@ -17,9 +17,6 @@ const int g_gridTreeSplitAxis[GRID_TREE_AXIS_COUNT] = { 0, 1, 0, 1, 0, 1, 2, 0, 
 
 char s_assertDisable_GridTree_ClassifyNode;
 char s_assertDisable_GridTree_FindNode;
-char s_assertDisable_GridTree_FindNode;
-char s_assertDisable_GridTree_FindNode;
-char s_assertDisable_GridTree_FindNode;
 char s_assertDisable_GridTree_Init;
 char s_assertDisable_GridTree_Insert;
 char s_assertDisable_GridTree_Remove;

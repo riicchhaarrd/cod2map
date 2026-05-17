@@ -50,12 +50,14 @@ Debug printf - only prints if verbose mode is enabled.
 */
 int Com_DPrintf(const char *fmt, ...)
 {
+  int result = 0;
   va_list args;
 
   va_start(args, fmt);
   if ( verbose )
-    return vprintf(fmt, args);
-  return 0;
+    result = vprintf(fmt, args);
+  va_end(args);
+  return result;
 }
 
 /*
@@ -73,8 +75,10 @@ void Com_Printf(const char *fmt, ...)
   va_list args;
 
   va_start(args, fmt);
-  vsprintf(buf, fmt, args);
-  printf(buf);
+  _vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+  buf[sizeof(buf) - 1] = '\0';
+  fputs(buf, stdout);
 
   /* IPC: send output to CoD2Map Process Server window */
   if ( !g_printfInit )
@@ -107,8 +111,7 @@ char *CopyString(const char *str)
   copy = malloc(len);
   if ( !copy )
     Z_MallocFailed(len);
-  memset(copy, 0, len);
-  strcpy(copy, str);
+  memcpy(copy, str, len);
   return copy;
 }
 
@@ -121,10 +124,13 @@ System printf - always prints to stdout.
 */
 int Sys_Printf(const char *fmt, ...)
 {
+  int result;
   va_list args;
 
   va_start(args, fmt);
-  return vprintf(fmt, args);
+  result = vprintf(fmt, args);
+  va_end(args);
+  return result;
 }
 
 /*

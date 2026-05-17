@@ -9,11 +9,6 @@ Reconstructed from cod2map.exe by Rose.
 char s_assertDisable_FindSharedVertex;
 char s_assertDisable_ParsePatchVertex;
 char s_assertDisable_SubdivideTerrain;
-char s_assertDisable_SubdivideTerrain;
-char s_assertDisable_SubdivideTerrain;
-char s_assertDisable_SubdivideTerrain;
-char s_assertDisable_SubdivideTerrain;
-char s_assertDisable_SubdivideTerrain;
 
 
 /*
@@ -414,8 +409,8 @@ Patch_t *ParsePatch(double unused, char **parsePtr, int patchType, float *transf
   brushFlags = ParseContentsFlags(parsePtr);
   toolFlags = ParseToolFlags(parsePtr);
   Com_SetSpaceDelimited(1);
-  strcpy(matName, COM_Parse(parsePtr));
-  strcpy(lmMatName, COM_Parse(parsePtr));
+  I_strncpyz(matName, COM_Parse(parsePtr), sizeof(matName));
+  I_strncpyz(lmMatName, COM_Parse(parsePtr), sizeof(lmMatName));
   Com_SetSpaceDelimited(0);
 
   width = COM_ParseInt(parsePtr);

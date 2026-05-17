@@ -1,0 +1,71 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: Canvas;
+  color: CanvasText;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h1, h2 {
+  margin: 0 0 12px;
+}
+
+.panel {
+  border: 1px solid color-mix(in srgb, CanvasText 18%, transparent);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.actions, .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+button, select {
+  font: inherit;
+  padding: 8px 10px;
+}
+
+select {
+  min-width: min(100%, 520px);
+}
+
+.note {
+  line-height: 1.45;
+  max-width: 78ch;
+}
+
+.small {
+  font-size: 0.92rem;
+}
+
+.status {
+  min-height: 1.4em;
+}
+
+#console {
+  min-height: 260px;
+  max-height: 520px;
+  overflow: auto;
+  padding: 12px;
+  background: color-mix(in srgb, CanvasText 8%, transparent);
+  border-radius: 8px;
+  white-space: pre-wrap;
+}
+
+#downloads a {
+  display: block;
+  margin-top: 8px;
+}

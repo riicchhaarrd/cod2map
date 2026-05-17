@@ -132,7 +132,7 @@ ShaderInfo_t *LoadMaterial(const char *materialName)
     }
 
     /* build file path and load from IWD */
-    sprintf(filePath, "%s/%s", g_targetPlatform->materialDirectory, materialName);
+    Com_sprintf(filePath, sizeof(filePath), "%s/%s", g_targetPlatform->materialDirectory, materialName);
 
     int fileSize = FS_LoadFile(filePath, &fileData);
     if ( fileSize >= 0 )
@@ -160,7 +160,7 @@ ShaderInfo_t *LoadMaterial(const char *materialName)
         matData->nameOfs += (intptr_t)fileData;
         matData->refImageOfs += (intptr_t)fileData;
 
-        strcpy(matEntry->name, materialName);
+        I_strncpyz(matEntry->name, materialName, sizeof(matEntry->name));
 
         matEntry->surfaceFlags = matData->surfaceFlags;
         matEntry->contentFlags = matData->contentFlags;

@@ -35,7 +35,7 @@ FILE *OpenDebugFile(void)
   char filePath[MAX_OS_PATH_SHORT];
 
   extension = GetPolyFileExtension();
-  sprintf(filePath, "%s%s", g_outputBasePath, extension);
+  Com_sprintf(filePath, sizeof(filePath), "%s%s", g_outputBasePath, extension);
   fileHandle = fopen(filePath, "wt");
   g_debugPolyFile = fileHandle;
   return fileHandle;

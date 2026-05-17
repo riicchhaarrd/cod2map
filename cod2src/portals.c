@@ -25,26 +25,13 @@ int   num_visportals;
 FILE *Stream;
 
 char s_assertDisable_BspTreeForMap;
-char s_assertDisable_BspTreeForMap;
-char s_assertDisable_BspTreeForMap;
 char s_assertDisable_BuildSidePlanes;
 char s_assertDisable_CreateLeafNode;
-char s_assertDisable_CreateLeafNode;
-char s_assertDisable_CreateLeafNode;
 char s_assertDisable_CreateNode;
-char s_assertDisable_CreateNode;
-char s_assertDisable_CreateNode;
-char s_assertDisable_FilterBrushIntoTree;
-char s_assertDisable_FilterBrushIntoTree;
-char s_assertDisable_FilterBrushIntoTree;
-char s_assertDisable_FilterBrushIntoTree;
 char s_assertDisable_FilterBrushIntoTree;
 char s_assertDisable_FreeBspTree;
 char s_assertDisable_FreeBspTree_r;
 char s_assertDisable_InitBspTreeNodes;
-char s_assertDisable_InitBspTreeNodes;
-char s_assertDisable_SplitBrush;
-char s_assertDisable_SplitBrush;
 char s_assertDisable_SplitBrush;
 char s_assertDisable_SplitBrushList;
 char s_assertDisable_WritePortalFile_Node;
@@ -1616,7 +1603,7 @@ void WritePortalFile_r(Tree_t *tree)
   char filepath[MAX_OS_PATH];
 
   Assert(tree, s_assertDisable_WritePortalFile_Node);
-  sprintf(filepath, "%s_portals.map", g_outputBasePath);
+  Com_sprintf(filepath, sizeof(filepath), "%s_portals.map", g_outputBasePath);
   file = fopen(filepath, "w");
   if ( !file )
     return;
@@ -2264,7 +2251,7 @@ int WritePortalFile(Tree_t *tree)
 
   Com_DPrintf("--- WritePortalFile ---\n");
   prtExt = GetPRTFileExtension();
-  sprintf(filepath, "%s%s", g_outputBasePath, prtExt);
+  Com_sprintf(filepath, sizeof(filepath), "%s%s", g_outputBasePath, prtExt);
   Com_Printf("writing %s\n", filepath);
 
   Stream = fopen(filepath, "w");

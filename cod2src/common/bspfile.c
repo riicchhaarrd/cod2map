@@ -120,29 +120,17 @@ char s_assertDisable_GetBSPFileExtension;
 char s_assertDisable_GetPRTFileExtension;
 char s_assertDisable_GetPolyFileExtension;
 char s_assertDisable_SetBSPFileExtensions;
-char s_assertDisable_SetBSPFileExtensions;
-char s_assertDisable_SetBSPFileExtensions;
 char s_assertDisable_SwapCollisionAabbLumpData;
-char s_assertDisable_SwapCollisionAabbLumpData;
-char s_assertDisable_SwapCollisionPartitionLumpData;
 char s_assertDisable_SwapCollisionPartitionLumpData;
 char s_assertDisable_SwapDrawSurfLumpData;
 char s_assertDisable_SwapDrawSurfLumpData_0;
 char s_assertDisable_SwapLightGridEntryLumpData;
-char s_assertDisable_SwapLightGridEntryLumpData;
-char s_assertDisable_SwapLumpData;
-char s_assertDisable_SwapLumpData;
-char s_assertDisable_SwapLumpData;
 char s_assertDisable_SwapLumpData;
 char s_assertDisable_SwapMaterialLumpData;
-char s_assertDisable_SwapMaterialLumpData;
-char s_assertDisable_SwapOccluderLumpData;
 char s_assertDisable_SwapOccluderLumpData;
 char s_assertDisable_SwapShortBlock;
 char s_assertDisable_SwapShortBlock_0;
 char s_assertDisable_SwapTriangleLumpData;
-char s_assertDisable_SwapTriangleLumpData;
-char s_assertDisable_SwapVisData;
 char s_assertDisable_SwapVisData;
 char s_assertDisable_UnparseEntities;
 
@@ -813,7 +801,7 @@ int WriteBSPFile(const char *filename, int swapFlag)
       Com_Error("could not open '%s' for writing\n", filename);
 
     /* prompt to replace read-only file */
-    sprintf(text, "could not open '%s' for writing; replace read-only file?", filename);
+    Com_sprintf(text, sizeof(text), "could not open '%s' for writing; replace read-only file?", filename);
     result = MessageBoxA(0, text, "OUTPUT FILE IS READ ONLY", MB_OKCANCEL | MB_ICONEXCLAMATION);
     if ( result == IDOK )
     {
@@ -1033,6 +1021,7 @@ int UnparseEntities()
   Epair_t *ep;
   char *p;
   int i;
+  size_t lineLen;
   
   /* contiguous buffer: line(2048) + key(1024) + value(1024) = 4096 bytes
      trim loops use cross-array pointer math — layout must not change */
@@ -1052,14 +1041,14 @@ int UnparseEntities()
       continue;
 
     /* open entity block */
-    strcat(end, "{\n");
+    memcpy(end, "{\n", 3);
     end += 2;
 
     /* write key-value pairs */
     for ( ep = ent->epairs; ep; ep = ep->next )
     {
       /* copy and trim key */
-      strcpy(keyBuf, ep->key);
+      I_strncpyz(keyBuf, ep->key, 1024);
       for ( p = &linePad[strlen(keyBuf) + 2046]; p >= keyBuf; *p-- = '\0' )
       {
         if ( *p > ' ' )
@@ -1067,20 +1056,21 @@ int UnparseEntities()
       }
 
       /* copy and trim value */
-      strcpy(valueBuf, ep->value);
+      I_strncpyz(valueBuf, ep->value, 1024);
       for ( p = &keyBuf[strlen(valueBuf) + 1023]; p >= valueBuf; *p-- = '\0' )
       {
         if ( *p > ' ' )
           break;
       }
 
-      sprintf(&lineBuf, "\"%s\" \"%s\"\n", keyBuf, valueBuf);
-      strcat(end, &lineBuf);
-      end = &end[&linePad[strlen(&lineBuf)] - linePad];
+      Com_sprintf(&lineBuf, 2048, "\"%s\" \"%s\"\n", keyBuf, valueBuf);
+      lineLen = strlen(&lineBuf);
+      memcpy(end, &lineBuf, lineLen + 1);
+      end += lineLen;
     }
 
     /* close entity block */
-    strcat(end, "}\n");
+    memcpy(end, "}\n", 3);
     end += 2;
     Assert(end == &bspEntData[strlen(bspEntData)], s_assertDisable_UnparseEntities);
     if ( end > bspEntData + MAX_MAP_ENTSTRING )
@@ -1110,6 +1100,7 @@ int UnparseEntitiesWithOrigins()
   char *modelLine, *afterLine;
   char *end, *writePos;
   int i;
+  size_t lineLen;
   
   /* contiguous buffer: line(2304) + key(1024) + value(1024) = 4352 bytes
      trim loops use cross-array pointer math — layout must not change */
@@ -1134,7 +1125,7 @@ int UnparseEntitiesWithOrigins()
         continue;
 
       /* trim key */
-      strcpy(value2, ep->key);
+      I_strncpyz(value2, ep->key, 1024);
       for ( p = &key2[strlen(value2) + 1023]; p >= value2; *p-- = '\0' )
       {
         if ( *p > ' ' )
@@ -1142,7 +1133,7 @@ int UnparseEntitiesWithOrigins()
       }
 
       /* trim value */
-      strcpy(key2, ep->value);
+      I_strncpyz(key2, ep->value, 1024);
       for ( p = &line[strlen(key2) + 2303]; p >= key2; *p-- = '\0' )
       {
         if ( *p > ' ' )
@@ -1150,7 +1141,7 @@ int UnparseEntitiesWithOrigins()
       }
 
       /* find this key-value pair in the entity string */
-      sprintf(origin, "\"%s\" \"%s\"\n", value2, key2);
+      Com_sprintf(origin, sizeof(origin), "\"%s\" \"%s\"\n", value2, key2);
       modelLine = strstr(bspEntData, origin);
       if ( modelLine )
         break;
@@ -1194,14 +1185,14 @@ int UnparseEntitiesWithOrigins()
       continue;
 
     /* open entity block */
-    strcat(end, "{\n");
+    memcpy(end, "{\n", 3);
     writePos = end + 2;
 
     /* write key-value pairs */
     for ( ep = ent->epairs; ep; ep = ep->next )
     {
       /* trim key */
-      strcpy(value2, ep->key);
+      I_strncpyz(value2, ep->key, 1024);
       for ( p = &key2[strlen(value2) + 1023]; p >= value2; *p-- = '\0' )
       {
         if ( *p > ' ' )
@@ -1209,20 +1200,21 @@ int UnparseEntitiesWithOrigins()
       }
 
       /* trim value */
-      strcpy(key2, ep->value);
+      I_strncpyz(key2, ep->value, 1024);
       for ( p = &line[strlen(key2) + 2303]; p >= key2; *p-- = '\0' )
       {
         if ( *p > ' ' )
           break;
       }
 
-      sprintf(line, "\"%s\" \"%s\"\n", value2, key2);
-      strcat(writePos, line);
-      writePos += strlen(line);
+      Com_sprintf(line, 2304, "\"%s\" \"%s\"\n", value2, key2);
+      lineLen = strlen(line);
+      memcpy(writePos, line, lineLen + 1);
+      writePos += lineLen;
     }
 
     /* close entity block */
-    strcat(writePos, "}\n");
+    memcpy(writePos, "}\n", 3);
     end = writePos + 2;
     if ( end > bspEntData + MAX_MAP_ENTSTRING )
       Com_Error("Entity string buffer overflow.  This is caused by too many entities and/or too many key pairs."
@@ -1355,9 +1347,9 @@ int SetBSPFileExtensions(const char *root)
   Assert(strlen(root) + 3 < 10, s_assertDisable_SetBSPFileExtensions);
   Assert(strlen(root) + 3 < 10, s_assertDisable_SetBSPFileExtensions);
   Assert(strlen(root) + 4 < 10, s_assertDisable_SetBSPFileExtensions);
-  sprintf(Buffer, ".%sbsp", root);
-  sprintf(g_prtFileExt, ".%sprt", root);
-  return sprintf(g_polyFileExt, ".%spoly", root);
+  Com_sprintf(Buffer, sizeof(Buffer), ".%sbsp", root);
+  Com_sprintf(g_prtFileExt, sizeof(g_prtFileExt), ".%sprt", root);
+  return Com_sprintf(g_polyFileExt, sizeof(g_polyFileExt), ".%spoly", root);
 }
 
 /*
