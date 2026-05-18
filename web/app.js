@@ -505,6 +505,11 @@ async function requestDirectoryWritePermission(handle) {
   return await handle.requestPermission?.(opts) === 'granted';
 }
 
+async function hasDirectoryWritePermission(handle) {
+  const opts = { mode: 'readwrite' };
+  return await handle.queryPermission?.(opts) === 'granted';
+}
+
 async function saveDirectorySource(handle) {
   await putDirectoryHandle(handle);
   savedSource = { type: 'directory', name: handle.name || 'CoD2 folder', savedAt: Date.now() };
@@ -683,8 +688,8 @@ async function writeGeneratedOutputToDirectory(relativePath, arrayBuffer) {
     throw new Error(`Refusing to write unexpected output file: ${rel}`);
   }
 
-  if (!(await requestDirectoryWritePermission(currentSource.rootHandle))) {
-    throw new Error('Write permission was not granted for the selected CoD2 folder.');
+  if (!(await hasDirectoryWritePermission(currentSource.rootHandle))) {
+    throw new Error('Write permission was not granted before compile started.');
   }
 
   const dir = await ensureDirectoryHandle(currentSource.rootHandle, dirname(rel));
@@ -799,6 +804,18 @@ async function runSelectedMap() {
     return;
   }
 
+  let canWriteOutputs = false;
+  if (currentSource.type === 'directory' && currentSource.rootHandle) {
+    try {
+      canWriteOutputs = await requestDirectoryWritePermission(currentSource.rootHandle);
+      if (!canWriteOutputs) {
+        log('Write permission was not granted. Generated files will remain available as downloads.');
+      }
+    } catch (error) {
+      log(`Write permission could not be requested: ${error.message || error}. Generated files will remain available as downloads.`);
+    }
+  }
+
   setStatus(runStatus, `Preparing ${choice.gameMode.toUpperCase()} map output ${displayPath(choice.compilePath)}...`);
   if (runButton) runButton.disabled = true;
   let files;
@@ -829,18 +846,24 @@ async function runSelectedMap() {
       const outputItem = addDownload(message.path, message.data, relativePath);
       setStatus(runStatus, `Generated ${message.path.split('/').pop()}.`);
 
-      const writeTask = writeGeneratedOutputToDirectory(relativePath, message.data)
-        .then(savedRel => {
-          if (savedRel) {
-            outputItem.meta.textContent = `${formatBytes(message.data.byteLength)} · saved to ${displayPath(savedRel)}`;
-            setStatus(runStatus, `Saved ${displayPath(savedRel)}.`);
-          }
-        })
-        .catch(error => {
-          outputItem.meta.textContent = `${formatBytes(message.data.byteLength)} · download only`;
-          log(`Could not write ${displayPath(relativePath)} to the selected folder: ${error.message || error}`);
-        });
-      pendingOutputWrites.push(writeTask);
+      if (canWriteOutputs) {
+        const writeTask = writeGeneratedOutputToDirectory(relativePath, message.data)
+          .then(savedRel => {
+            if (savedRel) {
+              outputItem.meta.textContent = `${formatBytes(message.data.byteLength)} · saved to ${displayPath(savedRel)}`;
+              setStatus(runStatus, `Saved ${displayPath(savedRel)}.`);
+            } else {
+              outputItem.meta.textContent = `${formatBytes(message.data.byteLength)} · download only`;
+            }
+          })
+          .catch(error => {
+            outputItem.meta.textContent = `${formatBytes(message.data.byteLength)} · download only`;
+            log(`Could not write ${displayPath(relativePath)} to the selected folder: ${error.message || error}`);
+          });
+        pendingOutputWrites.push(writeTask);
+      } else {
+        outputItem.meta.textContent = `${formatBytes(message.data.byteLength)} · download only`;
+      }
     } else if (message.type === 'done') {
       Promise.allSettled(pendingOutputWrites).then(() => {
         setStatus(runStatus, message.message);
