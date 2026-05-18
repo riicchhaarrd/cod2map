@@ -184,7 +184,7 @@ typedef int qboolean;
 #define SIDE_BACK                    1
 #define SIDE_ON                      2
 #define SIDE_CROSS                   3
-#define SIDE_BIT(side)               (1 << ((side) & 31))
+#define SIDE_BIT(side)               (1u << ((side) & 31))
 #define POINT_SIDE_WORD(entry, side) ((entry)[((side) >> 5) + 1])
 #define SIDE_BEHIND_OFS              8
 #define PLANENUM_LEAF                -1

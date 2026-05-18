@@ -1229,7 +1229,7 @@ int AddBrushPointCapsule(Brush_t *brush, float capsRadius, float capsHeight, int
   float expandedZ;
   int existingIdx;
   int *pointEntry;
-  int bitMask;
+  unsigned int bitMask;
   int arrayIndex;
   int sideIndex;
   int *bitmaskPtr;
@@ -1268,12 +1268,12 @@ int AddBrushPointCapsule(Brush_t *brush, float capsRadius, float capsHeight, int
     return numPoints + 1;
 
   /* classify point against each brush side (expanded for capsule) */
-  bitmaskPtr = pointEntry + 4;
-  arrayIndex = 0;
-  bitMask = 1;
   for (sideIndex = 0; sideIndex < brush->numSides; sideIndex++)
   {
     side = &brush->sides[sideIndex];
+    arrayIndex = sideIndex >> 5;
+    bitMask = SIDE_BIT(sideIndex);
+    bitmaskPtr = pointEntry + 4 + arrayIndex;
 
     /* skip the 3 planes that form this point */
     if (side->planenum != planeIndices[0] && side->planenum != planeIndices[1] && side->planenum != planeIndices[2])
@@ -1281,28 +1281,18 @@ int AddBrushPointCapsule(Brush_t *brush, float capsRadius, float capsHeight, int
       plane = MAP_PLANE(side->planenum);
       ExpandPlaneForCapsule(plane->normal, expandedPlane, capsRadius, capsHeight);
       dot = DotProduct102(point, expandedPlane) - expandedPlane[3];
-      Assert(arrayIndex == sideIndex >> 5, g_assertArrayIndex);
-      Assert(bitMask == SIDE_BIT(sideIndex), g_assertBrush_5);
       if (dot > ON_EPSILON)
       {
-        if ((*bitmaskPtr & bitMask) == 0)
+        if ((((unsigned int)*bitmaskPtr) & bitMask) == 0)
         {
-          *bitmaskPtr |= bitMask;      /* mark as in front of plane */
+          *bitmaskPtr = (int)(((unsigned int)*bitmaskPtr) | bitMask);      /* mark as in front of plane */
           ++pointEntry[BRUSH_POINT_DATA_OFS];  /* increment side count */
         }
       }
       else if (dot < -ON_EPSILON)
       {
-        bitmaskPtr[SIDE_BEHIND_OFS] |= bitMask;  /* mark as behind plane */
+        bitmaskPtr[SIDE_BEHIND_OFS] = (int)(((unsigned int)bitmaskPtr[SIDE_BEHIND_OFS]) | bitMask);  /* mark as behind plane */
       }
-    }
-
-    bitMask *= 2;
-    if (!bitMask)  /* overflow — move to next bitmask word */
-    {
-      bitMask = 1;
-      ++arrayIndex;
-      ++bitmaskPtr;
     }
   }
   return numPoints + 1;
