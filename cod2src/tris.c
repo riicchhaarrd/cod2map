@@ -683,11 +683,8 @@ Callback wrapper that extracts triSurfs from entries
 and tests groupability.
 ================
 */
-char TriSurfGroupableCallback(intptr_t entry1, intptr_t entry2)
+int TriSurfGroupableCallback(TriSurf_t *ts1, TriSurf_t *ts2)
 {
-  TriSurf_t *ts1 = (TriSurf_t *)entry1;
-  TriSurf_t *ts2 = (TriSurf_t *)entry2;
-
   return TriSurfPropsGroupable(ts1->props, ts2->props, (int *)ts2->winding);
 }
 
@@ -4184,6 +4181,21 @@ int TriangulateSurf(TriSurf_t *ts, int vertIdx0, int vertIdx1, int vertIdx2, int
 
 /*
 ================
+TriangulateSurfCallback
+
+Type-correct adapter for TesselateWinding. Native ABIs allowed the
+legacy int-returning TriangulateSurf function to be passed through a
+void-returning callback slot, but WebAssembly validates indirect-call
+signatures and traps on that mismatch.
+================
+*/
+static void TriangulateSurfCallback(TriSurf_t *ts, int vertIdx0, int vertIdx1, int vertIdx2, int drawOrder, int triFlags)
+{
+  (void)TriangulateSurf(ts, vertIdx0, vertIdx1, vertIdx2, drawOrder, triFlags);
+}
+
+/*
+================
 EmitTriSurfForProps
 
 Emits a triangle surface for the given material properties,
@@ -4254,7 +4266,7 @@ int EmitTriSurfForProps(Winding_t *winding, Tree_t *bspTree, TriSurfProps_t *mat
   surf_buf.boundsMax[4] = 0.0;
   memset(&surf_buf.boundsMax[7], 0, 12);
 
-  result = TesselateWinding((TriSurf_t *)surf_buf.surfData, visResult, cellIndex, TriangulateSurf);
+  result = TesselateWinding((TriSurf_t *)surf_buf.surfData, visResult, cellIndex, TriangulateSurfCallback);
   trisTransientMode = 0;
   return result;
 }
@@ -4636,7 +4648,7 @@ int Tris_TriangulateWindings(void)
     /* tesselate and free all surfaces in this cell */
     for ( ts = triSurfCellArray[cell]; ts; ts = next )
     {
-      TesselateWinding(ts, visResult, cellOffset, TriangulateSurf);
+      TesselateWinding(ts, visResult, cellOffset, TriangulateSurfCallback);
       next = ts->next;
       FreeTriSurf(ts);
     }
@@ -4801,7 +4813,7 @@ void Tris_FixTJunctions( Tree_t *bspTree )
   int cellCount, i;
 
   #define MAX_BSP_MERGE_SURFS 0x40000
-  MergeSurfaces_Init(MAX_BSP_MERGE_SURFS, (int (*)(TriSurf_t *, TriSurf_t *))TriSurfGroupableCallback, (MergeCallback_t)1);
+  MergeSurfaces_Init(MAX_BSP_MERGE_SURFS, TriSurfGroupableCallback, NULL);
   SetTrisTransientMode(2, 0);
 
   if ( g_currentEntityIndex <= 0 )
@@ -4817,6 +4829,13 @@ void Tris_FixTJunctions( Tree_t *bspTree )
 
   trisTransientMode = 0;
   MergeSurfaces_Shutdown();
+}
+
+
+static void MergeHolesForEachCallback(TriSurf_t *ts, bool isTarget)
+{
+  (void)isTarget;
+  MergeHoles(ts);
 }
 
 /*
@@ -4878,7 +4897,7 @@ void TriangulateEntity( Entity_t *entityData, Tree_t *bspTree )
     printf("%s...\n", "tethering holes to their concave windings");
     g_trisTimerStart = I_FloatTime();
   }
-  ForEachSurf((void (*)(TriSurf_t *, bool))MergeHoles, (TriSurf_t *)g_largeBuf);
+  ForEachSurf(MergeHolesForEachCallback, (TriSurf_t *)g_largeBuf);
   /* step 6: snap vertices */
   if ( !g_currentEntityIndex )
   {

@@ -283,6 +283,16 @@ short ShortNoSwap(short l)
   return l;
 }
 
+static int ShortSwapInt(int l)
+{
+  return ShortSwap((short)l);
+}
+
+static int ShortNoSwapInt(int l)
+{
+  return (short)l;
+}
+
 /*
 ================
 LongSwap
@@ -992,6 +1002,21 @@ double FloatNoSwap(float f)
   return f;
 }
 
+static int FloatSwapBits(int bits)
+{
+  float swappedFloat;
+  int swappedBits;
+
+  swappedFloat = (float)FloatSwap(bits);
+  memcpy(&swappedBits, &swappedFloat, sizeof(swappedBits));
+  return swappedBits;
+}
+
+static int FloatNoSwapBits(int bits)
+{
+  return bits;
+}
+
 /*
 ================
 Swap_Init
@@ -1003,22 +1028,22 @@ Sets swap and no-swap variants for short/long/float types.
 void Swap_Init(void)
 {
   _LittleShort = ShortNoSwap;
-  _BigShort = (int (*)(int))ShortSwap;
+  _BigShort = ShortSwapInt;
   _LittleLong = LongNoSwap;
   _BigLong = (int (*)(int))LongSwap;
   _LittleLong64 = Long64Swap;
-  _BigFloat = (int (*)(int))FloatSwap;
+  _BigFloat = FloatSwapBits;
   _LittleFloat = LongSwapUnsigned;
 }
 
 int Swap_InitByteSwap()
 {
   _LittleShort = ShortSwap;
-  _BigShort = (int (*)(int))ShortNoSwap;
+  _BigShort = ShortNoSwapInt;
   _LittleLong = LongSwap;
   _BigLong = (int (*)(int))LongNoSwap;
   _LittleLong64 = Long64NoSwap;
-  _BigFloat = (int (*)(int))FloatNoSwap;
+  _BigFloat = FloatNoSwapBits;
   _LittleFloat = (void*)FloatNoSwap;
   return 1;
 }

@@ -1611,7 +1611,20 @@ Dvar_t *Dvar_FindMalleableVar(short flags, char *dvarName, int type, char *value
   Dvar_t *dvar;
 
   Assert((flags & DVAR_SYS_MASK) != 0, s_assertDisable_Dvar_FindMalleableVar);
+#ifdef __EMSCRIPTEN__
+  /*
+   * In the browser build, startup strings may come from argv/JS glue or
+   * transient libc buffers inside Wasm linear memory.  The original tool
+   * asserted that non-external dvar names were backed by permanent storage,
+   * then kept the pointer directly.  That check is too brittle for the Wasm
+   * runtime and aborts during FS_Startup.  Preserve native behavior, but make
+   * browser dvar names permanent before registration/hash insertion.
+   */
+  if ( !(flags & DVAR_EXTERNAL) && !CanKeepStringPointer((uintptr_t)dvarName) )
+    dvarName = CopyStringHunk(dvarName);
+#else
   Assert((flags & DVAR_EXTERNAL) || CanKeepStringPointer((uintptr_t)dvarName), s_assertDisable_Dvar_FindMalleableVar);
+#endif
   dvar = (Dvar_t *)dvarHashTable[Dvar_GenerateHashValue(dvarName)];
   if ( !dvar ) {
     return Dvar_RegisterNew((signed char)type, dvarName, flags, (intptr_t)value, domainMin, domainMax);
@@ -1661,7 +1674,9 @@ Dvar_t *Dvar_RegisterString(const char *dvarName, const char *value, short flags
 {
   Assert(dvarName, s_assertDisable_Dvar_RegisterString);
   Assert(value, s_assertDisable_Dvar_RegisterString);
+#ifndef __EMSCRIPTEN__
   Assert((flags & DVAR_EXTERNAL) || CanKeepStringPointer((uintptr_t)value), s_assertDisable_Dvar_RegisterString);
+#endif
   return Dvar_FindMalleableVar(flags, (char *)dvarName, DVAR_TYPE_STRING, (char *)value, 0, 0);
 }
 

@@ -946,6 +946,16 @@ int TjuncProcessFace(TriSurf_t *surf)
   return RemoveDegenerateEdgesForFace(surf);
 }
 
+static void TJunc_ProcessSurfaceGridCallback(TriSurf_t *ts)
+{
+  (void)TJunc_ProcessSurface(ts);
+}
+
+static void TjuncProcessFaceGridCallback(TriSurf_t *surf)
+{
+  (void)TjuncProcessFace(surf);
+}
+
 /*
 ================
 TjuncOctreeProcess
@@ -973,7 +983,7 @@ int TjuncOctreeProcess(float *boundsMin, float *boundsMax, void (*faceCallback)(
   /* small enough to process directly */
   if ( count <= maxSurfs )
   {
-    GridTree_ForEach(boundsMin, boundsMax, TJunc_ProcessSurface);
+    GridTree_ForEach(boundsMin, boundsMax, TJunc_ProcessSurfaceGridCallback);
     GridTree_ForEach(boundsMin, boundsMax, faceCallback);
     TjuncReset();
     return 0;
@@ -1010,5 +1020,5 @@ Entry point: runs octree T-junction fixing on world bounds
 */
 int TjuncFixAll(float *boundsMin, float *boundsMax)
 {
-  return TjuncOctreeProcess(boundsMin, boundsMax, (void (*)(TriSurf_t *))TjuncProcessFace);
+  return TjuncOctreeProcess(boundsMin, boundsMax, TjuncProcessFaceGridCallback);
 }

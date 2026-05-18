@@ -11,6 +11,43 @@ emission. Uses SmAuxVert_t for projected vertex data.
 
 #include "cod2map.h"
 
+static void ShadowMid_TJuncProcessSurfaceGridCallback(TriSurf_t *ts)
+{
+  (void)TJunc_ProcessSurface(ts);
+}
+
+static void ShadowMid_TjuncFixSurfaceEdgesGridCallback(TriSurf_t *ts)
+{
+  (void)TjuncFixSurfaceEdges(ts);
+}
+
+static int ShadowMid_ProjectWindingThroughOccludersCallback(Winding_t *winding)
+{
+  return SM_ProjectWindingThroughOccluders(winding) != NULL;
+}
+
+static int ShadowMid_FreeWindingCallback(Winding_t *winding)
+{
+  FreeWinding(winding);
+  return 0;
+}
+
+static int ShadowMid_CanMergeSurfacesCallback(TriSurf_t *tsA, TriSurf_t *tsB)
+{
+  return SM_CanMergeSurfaces(tsA, tsB);
+}
+
+static int ShadowMid_WindingBehindPlaneCallback(TriSurf_t *tsA, TriSurf_t *tsB)
+{
+  return ShadowMid_WindingBehindPlane(tsA, tsB);
+}
+
+static void ShadowMid_InterpolateVertLerpCallback(float *from, float *to, double frac, float *result)
+{
+  (void)SM_InterpolateVert(from, to, frac, result);
+}
+
+
 SmCasterTri_t    *g_smCasterTriPool;
 SmCasterTri_t    *g_smCurrentCasterTri;
 SmOccluderNode_t *g_smOccluderTree;
@@ -328,8 +365,8 @@ int ShadowMid_FixTJunctions(void)
         cellMins[0] = FMA1(g_smGridMins[0], (float)ix, stepSize[0]);
         cellMaxs[0] = cellMins[0] + stepSize[0];
 
-        GridTree_ForEach(cellMins, cellMaxs, TJunc_ProcessSurface);
-        GridTree_ForEach(cellMins, cellMaxs, TjuncFixSurfaceEdges);
+        GridTree_ForEach(cellMins, cellMaxs, ShadowMid_TJuncProcessSurfaceGridCallback);
+        GridTree_ForEach(cellMins, cellMaxs, ShadowMid_TjuncFixSurfaceEdgesGridCallback);
         TjuncReset();
       }
     }
@@ -661,6 +698,14 @@ size_t ShadowMid_EmitTriCallback(TriSurf_t *ts, int vertIdx0, int vertIdx1, int 
   return EmitShadowTriIndices(triVerts);
 }
 
+/* WebAssembly traps on indirect calls whose function-pointer signatures
+   do not match exactly. Keep the size_t-returning implementation for
+   callers that use the result and pass this void adapter to TesselateWinding. */
+static void ShadowMid_EmitTriCallbackAdapter(TriSurf_t *ts, int vertIdx0, int vertIdx1, int vertIdx2, int cellIndex, int cullGroupIndex)
+{
+  (void)ShadowMid_EmitTriCallback(ts, vertIdx0, vertIdx1, vertIdx2, cellIndex, cullGroupIndex);
+}
+
 /*
 ================
 ShadowMid_TriangulateConcaveCasters
@@ -679,7 +724,7 @@ void ShadowMid_TriangulateConcaveCasters(void)
   {
     nextTs = ts->next;
     ts->origWinding = CopyWinding(ts->winding);
-    TesselateWinding(ts, TESS_CELL_SHADOW, 0, ShadowMid_EmitTriCallback);
+    TesselateWinding(ts, TESS_CELL_SHADOW, 0, ShadowMid_EmitTriCallbackAdapter);
     FreeTriSurf(ts);
   }
 
@@ -1378,7 +1423,7 @@ Recursive wrapper that clips a winding by occluders then projects through.
 */
 int SM_ProjectWindingThroughOccluders_r(Winding_t *winding)
 {
-  return ShadowMid_ClipWindingByOccluders_r(winding, 0, (int (*)(Winding_t *))SM_ProjectWindingThroughOccluders, 0, 0);
+  return ShadowMid_ClipWindingByOccluders_r(winding, 0, ShadowMid_ProjectWindingThroughOccludersCallback, 0, 0);
 }
 
 /*
@@ -1605,8 +1650,8 @@ void ShadowMid_FindMinimalCastingTris(void)
     memcpy(w->points, tri->corners, 9 * sizeof(float));
     ShadowMid_ClipWindingByOccluders_r(
       w, 1,
-      (int (*)(Winding_t *))SM_ProjectWindingThroughOccluders_r,
-      (int (*)(Winding_t *))FreeWinding, 0);
+      SM_ProjectWindingThroughOccluders_r,
+      ShadowMid_FreeWindingCallback, 0);
 
     /* free occluder windings */
     for ( i = 0; i < g_smNumOccluders; i++ )
@@ -1831,7 +1876,7 @@ void MergeShadowCasters(Tree_t *visGroups)
 {
   printf("merging into concave shadow casters...\n");
   SetTrisTransientMode(2, 0);
-  MergeSurfaces_Init(MAX_SHADOW_MERGE_SURFS, (int (*)(TriSurf_t *, TriSurf_t *))SM_CanMergeSurfaces, (MergeCallback_t)1);
+  MergeSurfaces_Init(MAX_SHADOW_MERGE_SURFS, ShadowMid_CanMergeSurfacesCallback, NULL);
   MergeVisGroupList(
     &g_smCasterWindingList,
     g_smGridMins,
@@ -1863,7 +1908,7 @@ void PlugShadowCasterNotches(void)
     SM_FlattenSurfToWinding(caster);
 
   /* set up 2D search bounds and plug notches */
-  MergeSurfaces_Init(MAX_SHADOW_MERGE_SURFS, (int (*)(TriSurf_t *, TriSurf_t *))ShadowMid_WindingBehindPlane, (MergeCallback_t)0);
+  MergeSurfaces_Init(MAX_SHADOW_MERGE_SURFS, ShadowMid_WindingBehindPlaneCallback, NULL);
   SetTrisTransientMode(2, 0);
   searchMins[0] = g_smCasterBoundsMin[0];
   searchMins[1] = g_smCasterBoundsMin[1];
@@ -1900,7 +1945,7 @@ void BuildMidpointShadowCasters(Tree_t *visGroups)
   {
     GridTree_Init();
     TJunc_Init(sizeof(SmAuxVert_t));  /* aux vertex stride: 7 floats per projected vertex */
-    g_lerpAuxDataCallback = (void (*)(float *, float *, double, float *))SM_InterpolateVert;
+    g_lerpAuxDataCallback = ShadowMid_InterpolateVertLerpCallback;
     ShadowMid_SortShadowTris();
     ShadowMid_FindMinimalCastingTris();
     MergeShadowCasters(visGroups);

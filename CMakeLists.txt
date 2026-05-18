@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.22)
 project(cod2map LANGUAGES C)
 
 option(COD2MAP_WASM "Build the Emscripten/WebAssembly browser target" OFF)
+set(COD2MAP_WASM_STACK_SIZE "33554432" CACHE STRING "Stack size in bytes for the Emscripten/WebAssembly build")
+set(COD2MAP_WASM_INITIAL_HEAP "134217728" CACHE STRING "Initial heap size in bytes for the Emscripten/WebAssembly build")
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -143,7 +145,9 @@ if(COD2MAP_WASM OR EMSCRIPTEN)
     "-sFORCE_FILESYSTEM=1"
     "-sENVIRONMENT=worker"
     "-sALLOW_MEMORY_GROWTH=1"
-    "-sEXIT_RUNTIME=1"
+    "-sSTACK_SIZE=${COD2MAP_WASM_STACK_SIZE}"
+    "-sINITIAL_HEAP=${COD2MAP_WASM_INITIAL_HEAP}"
+    "-sEXIT_RUNTIME=0"
     "-sINVOKE_RUN=0"
   )
 endif()

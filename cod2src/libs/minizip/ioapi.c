@@ -63,6 +63,21 @@ ZPOS64_T call_ztell64 (const zlib_filefunc64_32_def* pfilefunc, voidpf filestrea
     }
 }
 
+
+#if defined(__EMSCRIPTEN__)
+static const char *emscripten_normalize_zip_path(const char *filename, char *buffer, size_t bufferSize) {
+    size_t i;
+
+    if (filename == NULL || buffer == NULL || bufferSize == 0)
+        return filename;
+
+    for (i = 0; i + 1 < bufferSize && filename[i]; ++i)
+        buffer[i] = filename[i] == '\\' ? '/' : filename[i];
+    buffer[i] = '\0';
+    return buffer;
+}
+#endif
+
 void fill_zlib_filefunc64_32_def_from_filefunc32(zlib_filefunc64_32_def* p_filefunc64_32, const zlib_filefunc_def* p_filefunc32) {
     p_filefunc64_32->zfile_func64.zopen64_file = NULL;
     p_filefunc64_32->zopen32_file = p_filefunc32->zopen_file;
@@ -92,8 +107,14 @@ static voidpf ZCALLBACK fopen_file_func(voidpf opaque, const char* filename, int
     if (mode & ZLIB_FILEFUNC_MODE_CREATE)
         mode_fopen = "wb";
 
-    if ((filename!=NULL) && (mode_fopen != NULL))
+    if ((filename!=NULL) && (mode_fopen != NULL)) {
+#if defined(__EMSCRIPTEN__)
+        char normalized[4096];
+        file = fopen(emscripten_normalize_zip_path(filename, normalized, sizeof(normalized)), mode_fopen);
+#else
         file = fopen(filename, mode_fopen);
+#endif
+    }
     return file;
 }
 
@@ -110,8 +131,14 @@ static voidpf ZCALLBACK fopen64_file_func(voidpf opaque, const void* filename, i
     if (mode & ZLIB_FILEFUNC_MODE_CREATE)
         mode_fopen = "wb";
 
-    if ((filename!=NULL) && (mode_fopen != NULL))
+    if ((filename!=NULL) && (mode_fopen != NULL)) {
+#if defined(__EMSCRIPTEN__)
+        char normalized[4096];
+        file = FOPEN_FUNC(emscripten_normalize_zip_path((const char*)filename, normalized, sizeof(normalized)), mode_fopen);
+#else
         file = FOPEN_FUNC((const char*)filename, mode_fopen);
+#endif
+    }
     return file;
 }
 

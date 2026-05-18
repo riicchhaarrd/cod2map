@@ -215,13 +215,23 @@ void LoadPrefab(const char *prefabName, float *transformMtx, float brushScale, i
 {
   void *fileData;
   char filePath[MAX_OS_PATH];
+  int fileLen;
 
   Assert(prefabName, s_assertDisable_LoadPrefab);
   Assert(transformMtx, s_assertDisable_LoadPrefab);
 
-  I_strncpyz(filePath, FS_BuildOSPath(va("map_source\\%s", prefabName)), sizeof(filePath));
+  I_strncpyz(filePath, FS_BuildOSPath(va("map_source/%s", prefabName)), sizeof(filePath));
+  fileLen = LoadFile(filePath, &fileData);
 
-  if ( LoadFile(filePath, &fileData) >= 0 )
+  if ( fileLen < 0 )
+  {
+    /* Some source packages place prefabs at the selected root instead of under
+       map_source. Try the direct path before reporting the missing prefab. */
+    I_strncpyz(filePath, FS_BuildOSPath((char *)prefabName), sizeof(filePath));
+    fileLen = LoadFile(filePath, &fileData);
+  }
+
+  if ( fileLen >= 0 )
   {
     ParseMapFile(filePath, _strdup(prefabName), fileData, transformMtx, brushScale, parentEntity);
     free(fileData);
@@ -1173,16 +1183,39 @@ void LoadCollisionMap(char *collmapPath, const char *modelName, float *origin, f
   char *versionStr;
   void *fileData;
   char *parsePtr;
+  char baseName[MAX_OS_PATH];
+  char tryPath[MAX_OS_PATH];
+  int fileLen;
 
-  if ( LoadFile(collmapPath, &fileData) >= 0 )
+  I_strncpyz(tryPath, collmapPath, sizeof(tryPath));
+  fileLen = LoadFile(tryPath, &fileData);
+
+  if ( fileLen < 0 )
   {
-    InitMapParsing(collmapPath);
+    FS_ExtractBasename(modelName, baseName);
+    Com_sprintf(tryPath, sizeof(tryPath), "%s/%s.map", FS_BuildOSPath("map_source/collmaps"), baseName);
+    fileLen = LoadFile(tryPath, &fileData);
+  }
+  if ( fileLen < 0 )
+  {
+    Com_sprintf(tryPath, sizeof(tryPath), "%s/%s.map", FS_BuildOSPath("collmaps"), modelName);
+    fileLen = LoadFile(tryPath, &fileData);
+  }
+  if ( fileLen < 0 )
+  {
+    Com_sprintf(tryPath, sizeof(tryPath), "%s/%s.map", FS_BuildOSPath("map_source/collmaps"), modelName);
+    fileLen = LoadFile(tryPath, &fileData);
+  }
+
+  if ( fileLen >= 0 )
+  {
+    InitMapParsing(tryPath);
     parsePtr = fileData;
     if ( strcmp(COM_Parse(&parsePtr), "iwmap") )
-      Com_Error("collmap '%s' is missing 'iwmap' version specification\n", collmapPath);
+      Com_Error("collmap '%s' is missing 'iwmap' version specification\n", tryPath);
     versionStr = COM_Parse(&parsePtr);
     if ( atol(versionStr) != IWMAP_VERSION )
-      Com_Error("collmap '%s' is version '%s'; should be version '%i'\n", collmapPath, versionStr, IWMAP_VERSION);
+      Com_Error("collmap '%s' is version '%s'; should be version '%i'\n", tryPath, versionStr, IWMAP_VERSION);
     while ( ParseCollisionMapEntity(modelName, &parsePtr, origin, angles, modelScale) )
       ;
     Com_EndParseSession();
@@ -1351,7 +1384,7 @@ int ProcessScriptVehicles()
 
     /* build collision map path */
     FS_ExtractBasename(model, baseName);
-    Com_sprintf(collmapPath, sizeof(collmapPath), "%s%s.map", FS_BuildOSPath("collmaps/"), baseName);
+    Com_sprintf(collmapPath, sizeof(collmapPath), "%s/%s.map", FS_BuildOSPath("collmaps"), baseName);
 
     /* check if a script_vehicle_collmap already provides collision */
     for ( j = 0; j < num_entities; j++ )

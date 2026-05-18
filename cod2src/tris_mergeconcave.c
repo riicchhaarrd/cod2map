@@ -451,20 +451,15 @@ MergeCheckGroupCallback
 Grid tree callback that adds a groupable surface to the merge group.
 ================
 */
-size_t MergeCheckGroupCallback(TriSurf_t *ts)
+void MergeCheckGroupCallback(TriSurf_t *ts)
 {
-  size_t result;
-
   Assert(GetTrisTransientMode() == 2, s_assertDisable_MergeCheckGroupCallback);
-  result = mergeTraversalStamp;
   if ( (intptr_t)ts->origWinding != mergeTraversalStamp )
   {
     ts->origWinding = (void *)(intptr_t)mergeTraversalStamp;
-    result = mergeGroupableCallback(mergeSurfArray[0], ts);
-    if ( (char)result )
-      return MergeConcave_AddSurf(ts, mergeVisGroupListHead);
+    if ( mergeGroupableCallback(mergeSurfArray[0], ts) )
+      MergeConcave_AddSurf(ts, mergeVisGroupListHead);
   }
-  return result;
 }
 
 /*

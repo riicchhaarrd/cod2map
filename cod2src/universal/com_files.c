@@ -67,12 +67,12 @@ char *FS_BuildOSPath(char *relativePath)
   if ( *relativePath == '/' || *relativePath == '\\' || relativePath[1] == ':' )
   {
     I_strncpyz(g_ospath, relativePath, sizeof(g_ospath));
-    return g_ospath;
+    return FS_ReplaceSeparators(g_ospath);
   }
 
-  /* prepend basepath */
-  Com_sprintf(g_ospath, sizeof(g_ospath), "%s%s", g_basePath, relativePath);
-  return g_ospath;
+  /* prepend basepath; g_basePath is stored without a trailing separator */
+  Com_sprintf(g_ospath, sizeof(g_ospath), "%s/%s", g_basePath, relativePath);
+  return FS_ReplaceSeparators(g_ospath);
 }
 
 /*
@@ -342,6 +342,11 @@ char *FS_ReplaceSeparators(char *path)
   char *src;
   char *dst;
   char c;
+#if defined(_WIN32)
+  const char nativeSep = '\\';
+#else
+  const char nativeSep = '/';
+#endif
 
   wasSep = 0;
   dst = path;
@@ -354,7 +359,7 @@ char *FS_ReplaceSeparators(char *path)
       if ( !wasSep )
       {
         wasSep = 1;
-        *dst++ = '\\';
+        *dst++ = nativeSep;
       }
     }
     else
@@ -365,7 +370,7 @@ char *FS_ReplaceSeparators(char *path)
     ++src;
   }
   *dst = 0;
-  return dst;
+  return path;
 }
 
 /*
@@ -1377,12 +1382,30 @@ Iwd_t *FS_LoadZipFile( char *zipPath, char *basename )
   unz_global_info globalInfo;
   char nameBuf[MAX_OS_PATH_SHORT];
 
+#if defined(__EMSCRIPTEN__)
+  Sys_Printf( "Browser VFS: loading IWD '%s'...\n", zipPath );
+#endif
+
   uf = unzOpen( zipPath );
   if ( !uf )
+  {
+#if defined(__EMSCRIPTEN__)
+    Sys_Printf( "WARNING: could not open IWD '%s' as a ZIP archive\n", zipPath );
+#endif
     return NULL;
+  }
   if ( unzGetGlobalInfo( uf, &globalInfo ) )
+  {
+#if defined(__EMSCRIPTEN__)
+    Sys_Printf( "WARNING: could not read ZIP directory in IWD '%s'\n", zipPath );
+#endif
+    unzClose( uf );
     return NULL;
+  }
   numFiles = (unsigned int)globalInfo.number_entry;
+#if defined(__EMSCRIPTEN__)
+  Sys_Printf( "Browser VFS: indexing %u file(s) from IWD '%s'...\n", numFiles, zipPath );
+#endif
 
   g_totalIwdFiles += numFiles;
 
@@ -1451,6 +1474,9 @@ Iwd_t *FS_LoadZipFile( char *zipPath, char *basename )
 
   Z_Free( checksumArray );
   pak->buildBuffer = fileArray;
+#if defined(__EMSCRIPTEN__)
+  Sys_Printf( "Browser VFS: indexed %i/%u file(s) from IWD '%s'.\n", i, numFiles, zipPath );
+#endif
   return pak;
 }
 
@@ -1661,6 +1687,9 @@ void FS_AddIwdFilesForGameDirectory( const char *basepath, char *gamedir )
 
   numFiles = 0;
   fileList = Sys_ListFiles( ospath, "iwd", 0, &numFiles, 0 );
+#if defined(__EMSCRIPTEN__)
+  Sys_Printf( "Browser VFS: Sys_ListFiles('%s', 'iwd') returned %i file(s)\n", ospath, numFiles );
+#endif
 
   if ( numFiles > MAX_IWD_FILES )
   {

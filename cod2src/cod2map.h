@@ -2621,7 +2621,7 @@ int FreeTriSurf(TriSurf_t *ts);
 double I_fclamp(float val, float min, float max);
 int *FreeAllTriSurfs();
 char TriSurfPropsGroupable(TriSurfProps_t *s1, TriSurfProps_t *s2, int *testPoints);
-char TriSurfGroupableCallback(intptr_t entry1, intptr_t entry2);
+int TriSurfGroupableCallback(TriSurf_t *ts1, TriSurf_t *ts2);
 int EmitTriSurface_r(Winding_t *winding, TriSurfProps_t *props, Node_t *node);
 char ludcmp(double *matrix, int *perm);
 unsigned char DeriveTextureVectors(float *planeNormal, float *triVerts, float *texVecs, float *texVecOut, float *lmapVecs, float *lmapVecOut, unsigned char *colorData, float *colorVecOut);
@@ -2713,7 +2713,7 @@ void *WindingArrayShift(int elemSize, intptr_t arrayBase, int destIdx, int shift
 void MergeConcave_ResetSurfCount();
 size_t MergeConcave_AddSurf(TriSurf_t *ts, TriSurf_t **listHead);
 size_t MergeConcave_GetSurfCount();
-size_t MergeCheckGroupCallback(TriSurf_t *ts);
+void MergeCheckGroupCallback(TriSurf_t *ts);
 void MergeMarkGroupCallback(TriSurf_t *ts);
 size_t MergeConcave_PropagateGroup(TriSurf_t *seedSurf);
 char MergeConcave_BuildGridTree(TriSurf_t *surfList, float *worldMins, float *worldMaxs);

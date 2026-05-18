@@ -38,6 +38,32 @@ static void split_pattern(const char *pattern, char *dir, size_t dirSize, char *
   if (!*wild) snprintf(wild, wildSize, "*");
 }
 
+static void lowercase_copy(char *dst, size_t dstSize, const char *src)
+{
+  size_t i;
+
+  if (!dstSize)
+    return;
+
+  for (i = 0; i + 1 < dstSize && src && src[i]; i++)
+    dst[i] = (char)tolower((unsigned char)src[i]);
+  dst[i] = '\0';
+}
+
+static int fnmatch_case_insensitive(const char *pattern, const char *name)
+{
+#if defined(FNM_CASEFOLD) && FNM_CASEFOLD
+  return fnmatch(pattern, name, FNM_CASEFOLD);
+#else
+  char lowerPattern[MAX_OS_PATH_SHORT];
+  char lowerName[MAX_OS_PATH_SHORT];
+
+  lowercase_copy(lowerPattern, sizeof(lowerPattern), pattern);
+  lowercase_copy(lowerName, sizeof(lowerName), name);
+  return fnmatch(lowerPattern, lowerName, 0);
+#endif
+}
+
 static int fill_find_data(find_handle_t *fh, struct _finddata_t *data)
 {
   struct dirent *de;
@@ -45,7 +71,7 @@ static int fill_find_data(find_handle_t *fh, struct _finddata_t *data)
   struct stat st;
 
   while ((de = readdir(fh->dir)) != NULL) {
-    if (fnmatch(fh->pattern, de->d_name, FNM_CASEFOLD) != 0)
+    if (fnmatch_case_insensitive(fh->pattern, de->d_name) != 0)
       continue;
 
     snprintf(full, sizeof(full), "%s/%s", fh->dirpath, de->d_name);
