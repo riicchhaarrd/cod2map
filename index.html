@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CoD2 Compile Tools</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="window" aria-label="CoD2 Compile Tools">
+    <div class="titlebar">CoD2 Compile Tools</div>
+
+    <section class="folder-row">
+      <label for="txtTreePath">CoD2 Folder (ex. c:\program files\activision\call of duty 2\)</label>
+      <div class="folder-controls">
+        <input id="txtTreePath" type="text" readonly value="">
+        <button id="chooseFolder" type="button">Browse...</button>
+        <button id="restoreFolder" type="button" disabled>Restore</button>
+      </div>
+      <input id="filePicker" type="file" multiple webkitdirectory hidden>
+    </section>
+
+    <section class="main-grid">
+      <section class="left-pane">
+        <div class="subfolder-row">
+          <label for="mapSubFolder">Map folder</label>
+          <select id="mapSubFolder">
+            <option value="map_source">map_source</option>
+            <option value="map_source/test">map_source\test</option>
+            <option value="main/maps">main\maps</option>
+            <option value="main/maps/mp">main\maps\mp</option>
+          </select>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Map tabs">
+          <button id="tabAllMaps" class="tab active" type="button" role="tab" aria-selected="true">All Maps</button>
+          <button id="tabMyMaps" class="tab" type="button" role="tab" aria-selected="false">My Maps</button>
+        </div>
+        <div class="map-panel">
+          <input id="mapFilter" type="search" placeholder="Filter maps">
+          <select id="mapSelect" size="17" aria-label="Map files"></select>
+          <div class="map-actions">
+            <button id="myMapToggle" type="button">Add to 'My Maps'</button>
+            <button id="refreshMaps" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <fieldset class="group grid-file">
+          <legend>Grid File</legend>
+          <label><input type="radio" name="gridOption" value="edit" checked> Edit Existing Grid</label>
+          <label><input type="radio" name="gridOption" value="new"> Make New Grid</label>
+          <label><input type="checkbox" id="gridCullModels"> models collect dots</label>
+          <button id="btnGrid" type="button">Start Grid</button>
+        </fieldset>
+      </section>
+
+      <section class="right-pane">
+        <fieldset class="group options-group">
+          <legend>BSP Options</legend>
+          <label><input type="checkbox" id="chkBSP" checked> Compile BSP</label>
+          <label><input type="checkbox" id="chkVis"> Compile -Vis (Multiplayer Only)</label>
+          <label><input type="checkbox" id="chkPaths"> Connect Paths</label>
+          <label><input type="checkbox" id="chkOnlyEnts"> onlyents</label>
+          <label class="option-line"><input type="checkbox" id="chkBlockSize"> blocksize <input id="txtBlockSize" type="text" value="1024"></label>
+          <label class="option-line"><input type="checkbox" id="chkSampleScale"> samplescale <input id="txtSampleScale" type="text" value="1"></label>
+          <label class="full-line">custom command line options <input id="txtBSPOptions" type="text"></label>
+        </fieldset>
+
+        <fieldset class="group options-group">
+          <legend>Light Options</legend>
+          <label><input type="checkbox" id="chkLight"> Compile Lighting</label>
+          <label><input type="checkbox" id="chkLightFast"> fast</label>
+          <label><input type="checkbox" id="chkLightExtra"> extra</label>
+          <label><input type="checkbox" id="chkLightVerbose"> verbose</label>
+          <label><input type="checkbox" id="chkModelShadow"> ModelShadow</label>
+          <label><input type="checkbox" id="chkNoModelShadow"> NoModelShadow</label>
+          <label><input type="checkbox" id="chkDumpOptions"> DumpOptions</label>
+          <label class="option-line"><input type="checkbox" id="chkTraces"> traces <input id="txtTraces" type="text" value="16"></label>
+          <label class="option-line"><input type="checkbox" id="chkBounceFraction"> bouncefraction <input id="txtBounceFraction" type="text" value="0.5"></label>
+          <label class="option-line"><input type="checkbox" id="chkJitter"> jitter <input id="txtJitter" type="text" value="1"></label>
+          <label class="full-line">custom command line options <input id="txtLightOptions" type="text"></label>
+        </fieldset>
+
+        <fieldset class="group compile-group">
+          <legend>Compile</legend>
+          <label><input type="checkbox" id="chkRunMapAfterCompile"> Run Map When Done</label>
+          <label><input type="checkbox" id="platformPc" checked> -platform pc</label>
+          <div class="compile-buttons">
+            <button id="runMap" type="button">Compile</button>
+            <button id="btnRunMap" type="button">Run Selected Map</button>
+          </div>
+          <div class="console-buttons">
+            <button id="openConsole" type="button">Console...</button>
+            <button id="copyConsole" type="button">Copy Log</button>
+            <button id="clearConsole" type="button">Clear Log</button>
+          </div>
+          <div id="runStatus" class="status-line">Idle.</div>
+        </fieldset>
+
+        <fieldset class="group result-group">
+          <legend>Generated Files</legend>
+          <div id="downloads" class="downloads empty">No generated files yet.</div>
+        </fieldset>
+      </section>
+    </section>
+
+    <section class="footer-status" aria-label="Status">
+      <span id="sourceStatus">No files loaded.</span>
+      <span><strong id="summaryFiles">0</strong> files</span>
+      <span><strong id="summaryMaps">0</strong> maps</span>
+      <span><strong id="summaryOutputs">0</strong> outputs</span>
+    </section>
+
+    <details id="inlineConsoleFallback" class="log-fallback" hidden>
+      <summary>Build log</summary>
+      <pre id="console" aria-live="polite"></pre>
+    </details>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
